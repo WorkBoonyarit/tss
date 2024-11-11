@@ -57,22 +57,6 @@ const dbArea = [
   },
 ];
 // ### steps (0) ###
-// const dbStaffArea = [
-//   {
-//     period: "2024-11",
-//     staffArea: [
-//       { staffId: "1", areaWork: ["1", "2"] },
-//       { staffId: "2", areaWork: ["2", "5", "6"] },
-//       { staffId: "3", areaWork: ["3", "4", "5", "1"] },
-//       { staffId: "4", areaWork: ["4", "5", "6", "2"] },
-//       { staffId: "5", areaWork: ["5", "6", "7", "1"] },
-//       { staffId: "6", areaWork: ["6", "7", "1", "8"] },
-//       { staffId: "7", areaWork: ["7", "1", "2", "6"] },
-//       { staffId: "8", areaWork: ["1", "2", "3", "4", "5", "6"] },
-//     ],
-//   },
-// ];
-
 const dbStaffArea = [
   {
     period: "2024-11",
