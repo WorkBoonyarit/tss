@@ -13,55 +13,236 @@ const dbStaff = [
 ];
 // ### steps (0) ###
 const dbArea = [
-  { id: "1", areaName: "ดินแดง", areaTime: ["09:00", "19:00"] },
-  { id: "2", areaName: "ดินแดง (บ่าย)", areaTime: ["09:00", "19:00"] },
-  { id: "3", areaName: "นางเลิ้ง", areaTime: ["09:00", "19:00"] },
-  { id: "4", areaName: "ลุมพินี", areaTime: ["09:00", "19:00"] },
-  { id: "5", areaName: "ทองหล่อ", areaTime: ["09:00", "19:00"] },
-  { id: "6", areaName: "สาธุประดิษฐ์", areaTime: ["09:00", "19:00"] },
-  { id: "7", areaName: "ท่าพระ", areaTime: ["09:00", "19:00"] },
+  {
+    id: "1",
+    areaName: "ดินแดง",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
+  {
+    id: "2",
+    areaName: "ดินแดง (บ่าย)",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NIGHT",
+  },
+  {
+    id: "3",
+    areaName: "นางเลิ้ง",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
+  {
+    id: "4",
+    areaName: "ลุมพินี",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
+  {
+    id: "5",
+    areaName: "ทองหล่อ",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
+  {
+    id: "6",
+    areaName: "สาธุประดิษฐ์",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
+  {
+    id: "7",
+    areaName: "ท่าพระ",
+    areaTime: ["09:00", "19:00"],
+    areaType: "NORMAL",
+  },
 ];
 // ### steps (0) ###
+// const dbStaffArea = [
+//   {
+//     period: "2024-11",
+//     staffArea: [
+//       { staffId: "1", areaWork: ["1", "2"] },
+//       { staffId: "2", areaWork: ["2", "5", "6"] },
+//       { staffId: "3", areaWork: ["3", "4", "5", "1"] },
+//       { staffId: "4", areaWork: ["4", "5", "6", "2"] },
+//       { staffId: "5", areaWork: ["5", "6", "7", "1"] },
+//       { staffId: "6", areaWork: ["6", "7", "1", "8"] },
+//       { staffId: "7", areaWork: ["7", "1", "2", "6"] },
+//       { staffId: "8", areaWork: ["1", "2", "3", "4", "5", "6"] },
+//     ],
+//   },
+// ];
+
 const dbStaffArea = [
   {
     period: "2024-11",
-    staffArea: [
-      { staffId: "1", areaWork: ["1", "2", "3"] },
-      { staffId: "2", areaWork: ["2", "5", "6"] },
-      { staffId: "3", areaWork: ["3", "4", "5"] },
-      { staffId: "4", areaWork: ["4", "5", "6"] },
-      { staffId: "5", areaWork: ["5", "6", "7"] },
-      { staffId: "6", areaWork: ["6", "7", "1"] },
-      { staffId: "7", areaWork: ["7", "1", "2"] },
-      { staffId: "8", areaWork: ["1", "2", "3"] },
-    ],
+    areaId: "1",
+    staffId: "1",
+  },
+  {
+    period: "2024-11",
+    areaId: "2",
+    staffId: "1",
+  },
+  {
+    period: "2024-11",
+    areaId: "2",
+    staffId: "2",
+  },
+  {
+    period: "2024-11",
+    areaId: "5",
+    staffId: "2",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "2",
+  },
+  {
+    period: "2024-11",
+    areaId: "3",
+    staffId: "3",
+  },
+  {
+    period: "2024-11",
+    areaId: "4",
+    staffId: "3",
+  },
+  {
+    period: "2024-11",
+    areaId: "5",
+    staffId: "3",
+  },
+  {
+    period: "2024-11",
+    areaId: "1",
+    staffId: "3",
+  },
+  {
+    period: "2024-11",
+    areaId: "4",
+    staffId: "4",
+  },
+  {
+    period: "2024-11",
+    areaId: "5",
+    staffId: "4",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "4",
+  },
+  {
+    period: "2024-11",
+    areaId: "2",
+    staffId: "4",
+  },
+  {
+    period: "2024-11",
+    areaId: "5",
+    staffId: "5",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "5",
+  },
+  {
+    period: "2024-11",
+    areaId: "7",
+    staffId: "5",
+  },
+  {
+    period: "2024-11",
+    areaId: "1",
+    staffId: "5",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "6",
+  },
+  {
+    period: "2024-11",
+    areaId: "7",
+    staffId: "6",
+  },
+  {
+    period: "2024-11",
+    areaId: "8",
+    staffId: "6",
+  },
+  {
+    period: "2024-11",
+    areaId: "1",
+    staffId: "6",
+  },
+  {
+    period: "2024-11",
+    areaId: "7",
+    staffId: "7",
+  },
+  {
+    period: "2024-11",
+    areaId: "1",
+    staffId: "7",
+  },
+  {
+    period: "2024-11",
+    areaId: "2",
+    staffId: "7",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "7",
+  },
+  {
+    period: "2024-11",
+    areaId: "1",
+    staffId: "8",
+  },
+  {
+    period: "2024-11",
+    areaId: "2",
+    staffId: "8",
+  },
+  {
+    period: "2024-11",
+    areaId: "3",
+    staffId: "8",
+  },
+  {
+    period: "2024-11",
+    areaId: "4",
+    staffId: "8",
+  },
+  {
+    period: "2024-11",
+    areaId: "5",
+    staffId: "8",
+  },
+  {
+    period: "2024-11",
+    areaId: "6",
+    staffId: "8",
   },
 ];
 // ### steps (0) ###
 const dbStaffLeave = [
   {
     date: "2024-11-03",
-    staffId: "4",
-    leaveTime: ["19:00", "20:00"],
+    staffId: "3",
+    leaveTime: ["00:00", "05:00"],
     leaveType: "MEETING",
   },
-  // {
-  //   date: "2024-11-03",
-  //   staffId: "3",
-  //   leaveTime: ["09:00", "12:00"],
-  //   leaveType: "MEETING",
-  // },
   {
     date: "2024-11-03",
-    staffId: "7",
-    leaveTime: ["09:00", "19:00"],
-    leaveType: "ANNUAL LEAVE",
-  },
-  {
-    date: "2024-11-04",
-    staffId: "2",
-    leaveTime: ["09:00", "19:00"],
-    leaveType: "ANNUAL LEAVE",
+    staffId: "8",
+    leaveTime: ["00:00", "10:00"],
+    leaveType: "MEETING",
   },
 ];
 
@@ -69,22 +250,21 @@ const dbStaffLeave = [
 const exCludeArea = [["2", "4"], [], ["1", "3"], [], ["3"], ["5"], ["2", "7"]];
 
 // ### steps (1) ###
-const dbAreaOpens = Array(exCludeArea.length)
-  .fill("")
-  .map((_, idx) => {
-    return {
-      id: `${idx + 1}`,
-      date: moment().startOf("months").add(idx, "days").format("YYYY-MM-DD"),
-      areaIds: dbArea
-        .map((area) => area.id)
-        .filter((areaIds) => !exCludeArea[idx].includes(areaIds)),
-    };
-  });
+const dbAreaOpens = exCludeArea.map((_, idx) => {
+  return {
+    id: `${idx + 1}`,
+    date: moment().startOf("months").add(idx, "days").format("YYYY-MM-DD"),
+    areaIds: dbArea
+      .map((area) => area.id)
+      .filter((areaIds) => !exCludeArea[idx].includes(areaIds)),
+  };
+});
 
 module.exports = {
   exCludeArea,
   dbAreaOpens,
   dbStaffArea,
   dbStaffLeave,
+  dbStaff,
   dbArea,
 };
