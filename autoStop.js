@@ -40,19 +40,14 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (days, candidateStaff, staffNotAvailableTomorrow) => {
+  const pickStaff = (days, candidateStaff) => {
     let staffOutOfQuotaStop = [];
     if (days > 1) {
-      staffOutOfQuotaStop = duplicates([
-        ...staffOffHistory,
-        ...staffNotAvailableTomorrow,
-      ]);
-    } else {
-      staffOutOfQuotaStop = staffNotAvailableTomorrow;
+      staffOutOfQuotaStop = duplicates([...staffOffHistory]);
     }
     showLog &&
       console.log(
-        `🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว หรือพนักงานที่จะลาพรุ่งนี้:::`,
+        `🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`,
         staffOutOfQuotaStop
       );
 
@@ -60,8 +55,7 @@ module.exports = () => {
       const nextCandidateStaff = candidateStaff.filter((staff) =>
         staffOutOfQuotaStop.includes(staff)
       );
-      const msg =
-        "พนักงานที่ได้หยุดครบ 2 วันแล้ว หรือพนักงานที่จะลาในวันพรุ่งนี้";
+      const msg = "พนักงานที่ได้หยุดครบ 2 วันแล้ว";
       const resultPick = shuffleStaff(candidateStaff, nextCandidateStaff, msg);
       staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
       return resultPick;
@@ -192,21 +186,7 @@ module.exports = () => {
             candidateStaff
           );
 
-        const staffNotAvailableTomorrow = getStaffNotAvailableTomorrow(
-          tomorrowDate,
-          areaTime
-        );
-        showLog &&
-          console.log(
-            `🍻 ~ พนักงานที่ไม่ว่างในวันพรุ่งนี้ :::`,
-            staffNotAvailableTomorrow
-          );
-
-        const theChosenOne = pickStaff(
-          days,
-          candidateStaff,
-          staffNotAvailableTomorrow
-        );
+        const theChosenOne = pickStaff(days, candidateStaff);
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: ${areaOpen} :: พนักงานไม่เพียงพอกับพื้นที่ ::`

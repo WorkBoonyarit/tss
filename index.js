@@ -28,7 +28,7 @@ const retries = (fn, times) => {
 const run = () => {
   console.time("TSS");
   countStaff();
-  // validateLeave();
+  validateLeave();
   const result = retries(autoStop, 9);
   // console.log(`🍻 ~ result:::`, JSON.stringify(mapping(result), null, 2));
   console.timeEnd("TSS");
