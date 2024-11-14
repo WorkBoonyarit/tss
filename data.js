@@ -113,6 +113,12 @@ const dbStaffArea = settingArea.flatMap((s) => {
 });
 // ### steps (0) ###
 const dbStaffLeave = [
+  // {
+  //   date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
+  //   staffId: "4",
+  //   leaveTime: ["00:00", "23:00"],
+  //   leaveType: "ANNUAL LEAVE",
+  // },
   {
     date: moment().startOf("months").format("YYYY-MM-DD"),
     staffId: "1",

@@ -26,16 +26,18 @@ module.exports = () => {
       (staff) => !staffOffBfYesterDay.includes(staff)
     );
     if (nextCandidateStaff.length > 0) {
-      console.log(
-        `🟢 ~ [เลือกพนักงาน] => พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน :::`,
-        nextCandidateStaff
-      );
+      showLog &&
+        console.log(
+          `🟢 ~ [เลือกพนักงาน] => พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน :::`,
+          nextCandidateStaff
+        );
       return lodash.shuffle(nextCandidateStaff)[0];
     } else {
-      console.log(
-        `🔴 ~ [เลือกพนักงาน] => ต้องใช้พนักงานทุกคนที่สามารถทำได้ :::`,
-        candidateStaff
-      );
+      showLog &&
+        console.log(
+          `🔴 ~ [เลือกพนักงาน] => ต้องใช้พนักงานทุกคนที่สามารถทำได้ :::`,
+          candidateStaff
+        );
       return lodash.shuffle(candidateStaff)[0];
     }
   };
@@ -156,8 +158,8 @@ module.exports = () => {
       staffOffBfYesterDay = staffStop;
     });
 
-  !showLog &&
-    console.log(`🎁 ~ ผลลัพธ์ ::: ${JSON.stringify(results, null, 2)}`);
+  // !showLog &&
+  //   console.log(`🎁 ~ ผลลัพธ์ ::: ${JSON.stringify(results, null, 2)}`);
 
   return results;
 };

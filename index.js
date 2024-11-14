@@ -13,7 +13,11 @@ const run = (retries) => {
   console.time("TSS");
   try {
     // ### steps (2) ###
-    // validateLeave();
+    validateLeave();
+  } catch (error) {
+    console.log("ERROR :: ", error);
+  }
+  try {
     // ### steps (3) ###
     autoStop();
   } catch (error) {
@@ -27,4 +31,4 @@ const run = (retries) => {
   console.timeEnd("TSS");
 };
 
-run(3);
+run(2);
