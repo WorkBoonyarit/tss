@@ -9,26 +9,24 @@ const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
 
-const run = (retries) => {
-  console.time("TSS");
+const retries = (fn, retries) => {
   try {
-    // ### steps (2) ###
-    validateLeave();
-  } catch (error) {
-    console.log("ERROR :: ", error);
-  }
-  try {
-    // ### steps (3) ###
-    autoStop();
+    fn();
   } catch (error) {
     console.log("ERROR :: ", error);
     if (retries > 0) {
-      run(retries - 1);
+      fn(retries - 1);
     } else {
       throw new Error("All retries failed");
     }
   }
+};
+
+const run = () => {
+  console.time("TSS");
+  validateLeave();
+  retries(autoStop, 2);
   console.timeEnd("TSS");
 };
 
-run(2);
+run();

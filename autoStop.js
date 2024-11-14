@@ -10,7 +10,7 @@ const moment = require("moment");
 const lodash = require("lodash");
 
 module.exports = () => {
-  const showLog = true;
+  const showLog = false;
   const nowPeriod = moment().format("YYYY-MM");
 
   // query database
