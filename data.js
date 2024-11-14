@@ -56,174 +56,83 @@ const dbArea = [
     areaType: "NORMAL",
   },
 ];
+
 // ### steps (0) ###
-const dbStaffArea = [
+const settingArea = [
   {
     period: "2024-11",
-    areaId: "1",
     staffId: "1",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "2",
-    staffId: "1",
-  },
-  {
-    period: "2024-11",
-    areaId: "2",
     staffId: "2",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "5",
-    staffId: "2",
-  },
-  {
-    period: "2024-11",
-    areaId: "6",
-    staffId: "2",
-  },
-  {
-    period: "2024-11",
-    areaId: "3",
     staffId: "3",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "4",
-    staffId: "3",
-  },
-  {
-    period: "2024-11",
-    areaId: "5",
-    staffId: "3",
-  },
-  {
-    period: "2024-11",
-    areaId: "1",
-    staffId: "3",
-  },
-  {
-    period: "2024-11",
-    areaId: "4",
     staffId: "4",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "5",
-    staffId: "4",
-  },
-  {
-    period: "2024-11",
-    areaId: "6",
-    staffId: "4",
-  },
-  {
-    period: "2024-11",
-    areaId: "2",
-    staffId: "4",
-  },
-  {
-    period: "2024-11",
-    areaId: "5",
     staffId: "5",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "6",
-    staffId: "5",
-  },
-  {
-    period: "2024-11",
-    areaId: "7",
-    staffId: "5",
-  },
-  {
-    period: "2024-11",
-    areaId: "1",
-    staffId: "5",
-  },
-  {
-    period: "2024-11",
-    areaId: "6",
     staffId: "6",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "7",
-    staffId: "6",
-  },
-  {
-    period: "2024-11",
-    areaId: "8",
-    staffId: "6",
-  },
-  {
-    period: "2024-11",
-    areaId: "1",
-    staffId: "6",
-  },
-  {
-    period: "2024-11",
-    areaId: "7",
     staffId: "7",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
   {
     period: "2024-11",
-    areaId: "1",
-    staffId: "7",
-  },
-  {
-    period: "2024-11",
-    areaId: "2",
-    staffId: "7",
-  },
-  {
-    period: "2024-11",
-    areaId: "6",
-    staffId: "7",
-  },
-  {
-    period: "2024-11",
-    areaId: "1",
     staffId: "8",
-  },
-  {
-    period: "2024-11",
-    areaId: "2",
-    staffId: "8",
-  },
-  {
-    period: "2024-11",
-    areaId: "3",
-    staffId: "8",
-  },
-  {
-    period: "2024-11",
-    areaId: "4",
-    staffId: "8",
-  },
-  {
-    period: "2024-11",
-    areaId: "5",
-    staffId: "8",
-  },
-  {
-    period: "2024-11",
-    areaId: "6",
-    staffId: "8",
+    areaIds: ["1", "2", "3", "4", "5", "6", "7"],
   },
 ];
+
+// ### steps (0) ###
+const dbStaffArea = settingArea.flatMap((s) => {
+  return s.areaIds.map((a) => {
+    return {
+      period: s.period,
+      areaId: a,
+      staffId: s.staffId,
+    };
+  });
+});
 // ### steps (0) ###
 const dbStaffLeave = [
   {
-    date: "2024-11-03",
+    date: moment().startOf("months").format("YYYY-MM-DD"),
+    staffId: "1",
+    leaveTime: ["00:00", "05:00"],
+    leaveType: "ANNUAL LEAVE",
+  },
+  {
+    date: moment().startOf("months").format("YYYY-MM-DD"),
+    staffId: "3",
+    leaveTime: ["00:00", "12:00"],
+    leaveType: "MEETING",
+  },
+  {
+    date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
     staffId: "3",
     leaveTime: ["00:00", "05:00"],
     leaveType: "MEETING",
   },
   {
-    date: "2024-11-03",
+    date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
     staffId: "8",
     leaveTime: ["00:00", "10:00"],
     leaveType: "MEETING",

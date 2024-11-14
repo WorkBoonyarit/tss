@@ -32,7 +32,7 @@ module.exports = () => {
   });
 
   if (cannotLeave) {
-    throw new Error(`CAN NOT LEAVE :: REPEAT `);
+    throw new Error(`❌ CAN NOT LEAVE :: REPEAT `);
   }
 
   const periodLeave = moment(bodyReq.leaveDate).format("YYYY-MM");
@@ -81,7 +81,7 @@ module.exports = () => {
         .map((staff) => staff.staffId);
 
       if (staffInArea.length === 0) {
-        throw new Error(`CAN NOT LEAVE :: STAFF NOT ENOUGH AREA (${area}) `);
+        throw new Error(`❌ CAN NOT LEAVE :: STAFF NOT ENOUGH AREA (${area}) `);
       }
       staffInAreaValidate.push({
         areaId: area,
@@ -89,9 +89,9 @@ module.exports = () => {
       });
     });
 
-    console.log("CAN LEAVE");
+    console.log("✅ CAN LEAVE");
   } else {
     //สามารถลาได้เลย
-    console.log("CAN LEAVE");
+    console.log("✅ CAN LEAVE");
   }
 };
