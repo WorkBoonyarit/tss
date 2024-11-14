@@ -11,14 +11,14 @@ const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
 const mapping = require("./helper");
 
-const retries = (fn, retries) => {
+const retries = (fn, times) => {
   try {
     return fn();
   } catch (error) {
     console.log("ERROR :: ", error);
-    if (retries > 0) {
-      console.log(`========  RETRY (${retries}) ========`);
-      return fn(retries - 1);
+    if (times > 0) {
+      console.log(`========  RETRY (${times}) ========`);
+      return retries(fn, times - 1);
     } else {
       throw new Error("All retries failed");
     }
@@ -29,8 +29,8 @@ const run = () => {
   console.time("TSS");
   countStaff();
   // validateLeave();
-  const result = retries(autoStop, 5);
-  console.log(`🍻 ~ result:::`, JSON.stringify(mapping(result), null, 2));
+  const result = retries(autoStop, 9);
+  // console.log(`🍻 ~ result:::`, JSON.stringify(mapping(result), null, 2));
   console.timeEnd("TSS");
 };
 
