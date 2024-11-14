@@ -8,14 +8,16 @@
 const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
+const countStaff = require("./countStaff");
 
 const retries = (fn, retries) => {
   try {
-    fn();
+    return fn();
   } catch (error) {
     console.log("ERROR :: ", error);
     if (retries > 0) {
-      fn(retries - 1);
+      console.log(`========  RETRY (${retries}) ========`);
+      return fn(retries - 1);
     } else {
       throw new Error("All retries failed");
     }
@@ -24,8 +26,10 @@ const retries = (fn, retries) => {
 
 const run = () => {
   console.time("TSS");
-  validateLeave();
-  retries(autoStop, 2);
+  countStaff();
+  // validateLeave();
+  const result = retries(autoStop, 5);
+  // console.log(`🍻 ~ result:::`, result);
   console.timeEnd("TSS");
 };
 

@@ -62,12 +62,12 @@ const settingArea = [
   {
     period: "2024-11",
     staffId: "1",
-    areaIds: ["1", "2"],
+    areaIds: ["1", "2", "3"],
   },
   {
     period: "2024-11",
     staffId: "2",
-    areaIds: ["2", "5", "6"],
+    areaIds: ["2", "5", "6", "3"],
   },
   {
     period: "2024-11",
@@ -82,12 +82,12 @@ const settingArea = [
   {
     period: "2024-11",
     staffId: "5",
-    areaIds: ["1", "5", "6", "7"],
+    areaIds: ["3", "5", "6", "7"],
   },
   {
     period: "2024-11",
     staffId: "6",
-    areaIds: ["1", "6", "7", "8"],
+    areaIds: ["1", "4", "7", "8"],
   },
   {
     period: "2024-11",
@@ -168,6 +168,7 @@ const dbAreaOpens = exCludeArea.map((_, idx) => {
 });
 
 module.exports = {
+  settingArea,
   exCludeArea,
   dbAreaOpens,
   dbStaffArea,
