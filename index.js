@@ -9,6 +9,7 @@ const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
+const mapping = require("./helper");
 
 const retries = (fn, retries) => {
   try {
@@ -29,7 +30,7 @@ const run = () => {
   countStaff();
   // validateLeave();
   const result = retries(autoStop, 5);
-  // console.log(`🍻 ~ result:::`, result);
+  console.log(`🍻 ~ result:::`, JSON.stringify(mapping(result), null, 2));
   console.timeEnd("TSS");
 };
 
