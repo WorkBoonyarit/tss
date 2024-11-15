@@ -63,17 +63,17 @@ const settingArea = [
   {
     period: "2024-11",
     staffId: "1",
-    areaIds: ["1", "2", "3", "4"],
+    areaIds: ["1", "2", "3"],
   },
   {
     period: "2024-11",
     staffId: "2",
-    areaIds: ["2", "5", "6", "3", "7"],
+    areaIds: ["2", "5", "6", "3"],
   },
   {
     period: "2024-11",
     staffId: "3",
-    areaIds: ["1", "3", "4", "5", "7"],
+    areaIds: ["1", "3", "4", "5"],
   },
   {
     period: "2024-11",
@@ -83,7 +83,7 @@ const settingArea = [
   {
     period: "2024-11",
     staffId: "5",
-    areaIds: ["3", "5", "6", "7", "4"],
+    areaIds: ["3", "5", "6", "7"],
   },
   {
     period: "2024-11",
