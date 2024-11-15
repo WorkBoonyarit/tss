@@ -244,7 +244,7 @@ module.exports = () => {
         );
         if (!theChosenOne) {
           throw new Error(
-            `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: ${areaOpen} :: พนักงานไม่เพียงพอกับพื้นที่ ::`
+            `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
           );
         }
 

@@ -25,6 +25,7 @@ const mapStaffStop = (r) => {
 };
 
 module.exports = {
+  getAreaName,
   mapStaffWork,
   mapStaffStop,
 };

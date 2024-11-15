@@ -9,15 +9,24 @@ const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
-const { mapStaffStop, mapStaffWork } = require("./helper");
+const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
 const logUsage = require("./logUsage");
-const retryTime = 20;
+const retryTime = 100;
+const areaCannotAssign = {};
 
 const retries = (fn, times) => {
   try {
     return fn();
   } catch (error) {
     console.log("ERROR :: ", error);
+    const match = error.toString().match(/\(([^)]+)\)/);
+    const area = match ? match[1] : null;
+    areaCannotAssign[area] = {
+      areaId: area,
+      areaName: getAreaName(area),
+      count: (areaCannotAssign?.[area]?.count || 0) + 1,
+    };
+
     if (times >= 0) {
       console.log(`========  RETRY (${retryTime - times}) ========`);
       return retries(fn, times - 1);
@@ -39,7 +48,10 @@ const run = () => {
     console.table(mapStaffWork(r.staffWork));
     console.table(mapStaffStop(r.staffStop));
   });
+  console.log("วันหยุดของ staff จำนวนครั้ง");
   console.table(historyAllStop);
+  console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
+  console.table(areaCannotAssign);
   logUsage("After Execution");
 };
 
