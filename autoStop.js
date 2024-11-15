@@ -27,11 +27,22 @@ module.exports = () => {
   const duplicates = (arr) =>
     arr.filter((item, index) => arr.indexOf(item) !== index);
 
-  const shuffleStaff = (candidateStaff, nextCandidateStaff, msg) => {
+  const shuffleStaff = (
+    candidateStaff,
+    nextCandidateStaff,
+    msg,
+    shuffle = true,
+    icon
+  ) => {
     if (nextCandidateStaff.length > 0) {
       showLog &&
-        console.log(`🟢 ~ [เลือกพนักงาน] => ${msg} :::`, nextCandidateStaff);
-      return lodash.shuffle(nextCandidateStaff)[0];
+        console.log(
+          `${icon} ~ [เลือกพนักงาน] => ${msg} :::`,
+          nextCandidateStaff
+        );
+      return shuffle
+        ? lodash.shuffle(nextCandidateStaff)[0]
+        : nextCandidateStaff[0];
     } else {
       showLog &&
         console.log(
@@ -43,7 +54,7 @@ module.exports = () => {
   };
 
   const pickStaff = (days, candidateStaff) => {
-    let staffOutOfQuotaStop = duplicates([...staffOffHistory]);
+    let staffOutOfQuotaStop = lodash.uniq(duplicates([...staffOffHistory]));
     showLog &&
       console.log(
         `🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`,
@@ -56,32 +67,42 @@ module.exports = () => {
         staffWorkHistory
       );
     let staffPickFirst = lodash.uniq([
-      ...staffWorkHistory,
       ...staffOutOfQuotaStop,
+      ...staffWorkHistory,
     ]);
     showLog &&
-      console.log(
-        `🍻 ~ ไอดีที่ต้องเลือกพนักงานกลุ่มนี้ก่อน:::`,
-        staffPickFirst
-      );
+      console.log(`🍻 ~ ต้องเลือกพนักงานกลุ่มนี้ก่อน:::`, staffPickFirst);
 
     if (staffPickFirst.length > 0) {
-      const nextCandidateStaff = candidateStaff.filter((staff) =>
-        staffPickFirst.includes(staff)
+      const nextCandidateStaff = staffPickFirst.filter((staff) =>
+        candidateStaff.includes(staff)
       );
       const msg =
         "พนักงานที่สามารถทำงานต่อเนื่องได้ หรือ พนักงานที่หยุดเกิน 2 วัน";
-      const resultPick = shuffleStaff(candidateStaff, nextCandidateStaff, msg);
+      const resultPick = shuffleStaff(
+        candidateStaff,
+        nextCandidateStaff,
+        msg,
+        false,
+        "🔵"
+      );
       staffWorkHistory = staffWorkHistory.filter(
         (staff) => staff !== resultPick
       );
+      staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
       return resultPick;
     } else if (staffOutOfQuotaStop.length > 0) {
       const nextCandidateStaff = candidateStaff.filter((staff) =>
         staffOutOfQuotaStop.includes(staff)
       );
       const msg = "พนักงานที่ได้หยุดครบ 2 วันแล้ว";
-      const resultPick = shuffleStaff(candidateStaff, nextCandidateStaff, msg);
+      const resultPick = shuffleStaff(
+        candidateStaff,
+        nextCandidateStaff,
+        msg,
+        true,
+        "🟠"
+      );
       staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
@@ -89,7 +110,7 @@ module.exports = () => {
         (staff) => !staffOffYesterDay.includes(staff)
       );
       const msg = "พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน คงเหลือ";
-      return shuffleStaff(candidateStaff, nextCandidateStaff, msg);
+      return shuffleStaff(candidateStaff, nextCandidateStaff, msg, true, "🟢");
     }
   };
 
@@ -209,6 +230,9 @@ module.exports = () => {
       showLog && console.log(`🎁 ~ พนักงานที่ได้หยุด ::: ${staffStop}`);
       results.push({ date: nowDate, staffWork: workLists, staffStop });
       staffOffYesterDay = staffStop;
+      staffWorkHistory = staffWorkHistory.filter(
+        (staff) => !staffStop.includes(staff)
+      );
       staffOffHistory = [...staffOffHistory, ...staffStop];
       staffWorkHistory = [...staffWorkHistory, ...workListsStaffIds];
     });
