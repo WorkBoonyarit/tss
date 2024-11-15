@@ -11,16 +11,15 @@ const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
 const { mapStaffStop, mapStaffWork } = require("./helper");
 const logUsage = require("./logUsage");
+const retryTime = 20;
 
 const retries = (fn, times) => {
   try {
-    logUsage("After Execution");
     return fn();
   } catch (error) {
     console.log("ERROR :: ", error);
-    if (times > 0) {
-      console.log(`========  RETRY (${times}) ========`);
-      logUsage("After Execution");
+    if (times >= 0) {
+      console.log(`========  RETRY (${retryTime - times}) ========`);
       return retries(fn, times - 1);
     } else {
       logUsage("After Execution");
@@ -34,12 +33,14 @@ const run = () => {
 
   countStaff();
   // validateLeave();
-  const result = retries(autoStop, 9);
-  // result.forEach((r) => {
-  //   console.log(r.date);
-  //   console.table(mapStaffWork(r.staffWork));
-  //   console.table(mapStaffStop(r.staffStop));
-  // });
+  const { results, historyAllStop } = retries(autoStop, retryTime - 1);
+  results.forEach((r) => {
+    console.log(r.date);
+    console.table(mapStaffWork(r.staffWork));
+    console.table(mapStaffStop(r.staffStop));
+  });
+  console.table(historyAllStop);
+  logUsage("After Execution");
 };
 
 run();

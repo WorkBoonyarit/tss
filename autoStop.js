@@ -11,7 +11,7 @@ const lodash = require("lodash");
 const mapping = require("./helper");
 
 module.exports = () => {
-  const showLog = true;
+  const showLog = false;
   const nowPeriod = moment().format("YYYY-MM");
 
   // query database
@@ -22,7 +22,24 @@ module.exports = () => {
 
   let staffOffYesterDay = [];
   let staffWorkHistory = [];
+  let tempStaffWorkQuota = [];
   let staffOffHistory = [];
+  const historyAllStop = {};
+
+  const findExceedQuotaWork = (arr, threshold = 3) => {
+    // 4 days
+    const frequencyMap = new Map();
+
+    arr.forEach((num) => {
+      frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
+    });
+
+    const result = Array.from(frequencyMap.entries())
+      .filter(([num, count]) => count > threshold)
+      .map(([num]) => num);
+
+    return result;
+  };
 
   const duplicates = (arr) =>
     arr.filter((item, index) => arr.indexOf(item) !== index);
@@ -53,7 +70,11 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (days, candidateStaff) => {
+  const pickStaff = (days, candidateStaff, staffExceedWorkQuota) => {
+    let staffInQuota = candidateStaff.filter(
+      (staff) => !staffExceedWorkQuota.includes(staff)
+    );
+
     let staffOutOfQuotaStop = lodash.uniq(duplicates([...staffOffHistory]));
     showLog &&
       console.log(
@@ -75,12 +96,12 @@ module.exports = () => {
 
     if (staffPickFirst.length > 0) {
       const nextCandidateStaff = staffPickFirst.filter((staff) =>
-        candidateStaff.includes(staff)
+        staffInQuota.includes(staff)
       );
       const msg =
         "พนักงานที่สามารถทำงานต่อเนื่องได้ หรือ พนักงานที่หยุดเกิน 2 วัน";
       const resultPick = shuffleStaff(
-        candidateStaff,
+        staffInQuota,
         nextCandidateStaff,
         msg,
         false,
@@ -92,12 +113,12 @@ module.exports = () => {
       staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
       return resultPick;
     } else if (staffOutOfQuotaStop.length > 0) {
-      const nextCandidateStaff = candidateStaff.filter((staff) =>
+      const nextCandidateStaff = staffInQuota.filter((staff) =>
         staffOutOfQuotaStop.includes(staff)
       );
       const msg = "พนักงานที่ได้หยุดครบ 2 วันแล้ว";
       const resultPick = shuffleStaff(
-        candidateStaff,
+        staffInQuota,
         nextCandidateStaff,
         msg,
         true,
@@ -106,11 +127,11 @@ module.exports = () => {
       staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
-      const nextCandidateStaff = candidateStaff.filter(
+      const nextCandidateStaff = staffInQuota.filter(
         (staff) => !staffOffYesterDay.includes(staff)
       );
       const msg = "พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน คงเหลือ";
-      return shuffleStaff(candidateStaff, nextCandidateStaff, msg, true, "🟢");
+      return shuffleStaff(staffInQuota, nextCandidateStaff, msg, true, "🟢");
     }
   };
 
@@ -160,12 +181,13 @@ module.exports = () => {
           console.log(`🍻 ~ พนักงานที่ได้พื้นที่ไปแล้ว:::`, workListsStaffIds);
         showLog &&
           console.log(
-            `📍  พนักงานที่เลือกพื้นที่นี้ไว้ ${dbStaffArea
+            `📍  พนักงานที่เลือกพื้นที่นี้ไว้ `,
+            dbStaffArea
               .filter(
                 (staff) =>
                   staff.areaId === areaOpen && staff.period === nowPeriod
               )
-              .map((staff) => staff.staffId)}`
+              .map((staff) => staff.staffId)
           );
 
         const areaTime = dbArea.find((area) => area.id === areaOpen)?.areaTime;
@@ -208,7 +230,18 @@ module.exports = () => {
             candidateStaff
           );
 
-        const theChosenOne = pickStaff(days, candidateStaff);
+        const staffExceedWorkQuota = findExceedQuotaWork(tempStaffWorkQuota);
+        showLog &&
+          console.log(
+            `🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`,
+            staffExceedWorkQuota
+          );
+
+        const theChosenOne = pickStaff(
+          days,
+          candidateStaff,
+          staffExceedWorkQuota
+        );
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: ${areaOpen} :: พนักงานไม่เพียงพอกับพื้นที่ ::`
@@ -233,12 +266,24 @@ module.exports = () => {
       staffWorkHistory = staffWorkHistory.filter(
         (staff) => !staffStop.includes(staff)
       );
+
+      tempStaffWorkQuota = tempStaffWorkQuota.filter(
+        (staff) => !staffStop.includes(staff)
+      );
+
       staffOffHistory = [...staffOffHistory, ...staffStop];
       staffWorkHistory = [...staffWorkHistory, ...workListsStaffIds];
+      tempStaffWorkQuota = [...tempStaffWorkQuota, ...workListsStaffIds];
+
+      staffStop?.forEach?.((staff) => {
+        historyAllStop[staff] = {
+          staffId: staff,
+          count: (historyAllStop?.[staff]?.count || 0) + 1,
+        };
+      });
     });
 
   // !showLog &&
   //   console.log(`🎁 ~ ผลลัพธ์ ::: ${JSON.stringify(results, null, 2)}`);
-
-  return results;
+  return { results, historyAllStop };
 };
