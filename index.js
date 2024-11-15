@@ -11,14 +11,15 @@ const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
 const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
 const logUsage = require("./logUsage");
-const retryTime = 100;
+const excel = require("./excel");
+const retryTime = 300;
 const areaCannotAssign = {};
 
 const retries = (fn, times) => {
   try {
     return fn();
   } catch (error) {
-    console.log("ERROR :: ", error);
+    // console.log("ERROR :: ", error);
     const match = error.toString().match(/\(([^)]+)\)/);
     const area = match ? match[1] : null;
     areaCannotAssign[area] = {
@@ -31,6 +32,8 @@ const retries = (fn, times) => {
       console.log(`========  RETRY (${retryTime - times}) ========`);
       return retries(fn, times - 1);
     } else {
+      console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
+      console.table(areaCannotAssign);
       logUsage("After Execution");
       throw new Error("All retries failed");
     }
@@ -43,15 +46,17 @@ const run = () => {
   countStaff();
   // validateLeave();
   const { results, historyAllStop } = retries(autoStop, retryTime - 1);
-  results.forEach((r) => {
-    console.log(r.date);
-    console.table(mapStaffWork(r.staffWork));
-    console.table(mapStaffStop(r.staffStop));
-  });
-  console.log("วันหยุดของ staff จำนวนครั้ง");
-  console.table(historyAllStop);
+  excel(results);
+  // results.forEach((r) => {
+  //   console.log(r.date);
+  //   console.table(mapStaffWork(r.staffWork));
+  //   console.table(mapStaffStop(r.staffStop));
+  // });
   console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
   console.table(areaCannotAssign);
+  console.log("วันหยุดของ staff จำนวนครั้ง");
+  console.table(historyAllStop);
+
   logUsage("After Execution");
 };
 

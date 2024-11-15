@@ -20,6 +20,7 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
+    "write-excel-file": "^2.0.10",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
