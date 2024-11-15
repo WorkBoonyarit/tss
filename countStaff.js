@@ -10,5 +10,5 @@ module.exports = () => {
     })
     .sort((a, b) => a.count - b.count);
 
-  console.log(`🍻 ~ staffCounting:::`, staffCounting);
+  console.table(staffCounting, ["areaName", "count"]);
 };

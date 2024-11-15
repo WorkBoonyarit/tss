@@ -9,29 +9,37 @@ const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
 const countStaff = require("./countStaff");
-const mapping = require("./helper");
+const { mapStaffStop, mapStaffWork } = require("./helper");
+const logUsage = require("./logUsage");
 
 const retries = (fn, times) => {
   try {
+    logUsage("After Execution");
     return fn();
   } catch (error) {
     console.log("ERROR :: ", error);
     if (times > 0) {
       console.log(`========  RETRY (${times}) ========`);
+      logUsage("After Execution");
       return retries(fn, times - 1);
     } else {
+      logUsage("After Execution");
       throw new Error("All retries failed");
     }
   }
 };
 
 const run = () => {
-  console.time("TSS");
+  logUsage("Before Execution");
+
   countStaff();
-  validateLeave();
+  // validateLeave();
   const result = retries(autoStop, 9);
-  // console.log(`🍻 ~ result:::`, JSON.stringify(mapping(result), null, 2));
-  console.timeEnd("TSS");
+  // result.forEach((r) => {
+  //   console.log(r.date);
+  //   console.table(mapStaffWork(r.staffWork));
+  //   console.table(mapStaffStop(r.staffStop));
+  // });
 };
 
 run();

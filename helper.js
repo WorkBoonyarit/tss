@@ -1,23 +1,30 @@
 const { dbArea, dbStaff } = require("./data");
 
-module.exports = (results) => {
-  const getAreaName = (areaId) => {
-    return dbArea.find((area) => area.id === areaId).areaName;
-  };
-  const getStaffName = (staffId) => {
-    return dbStaff.find((staff) => staff.id === staffId).staffName;
-  };
-  return results.map((r) => {
-    const staffWork = r.staffWork.map((w) => ({
-      areaName: getAreaName(w.areaId),
-      staffName: getStaffName(w.staffId),
-      staffId: w.staffId,
-    }));
-    const staffStop = r.staffStop.map((w) => getStaffName(w));
+const getAreaName = (areaId) => {
+  return dbArea.find((area) => area.id === areaId).areaName;
+};
+const getStaffName = (staffId) => {
+  return dbStaff.find((staff) => staff.id === staffId).staffName;
+};
+
+const mapStaffWork = (r) => {
+  return r.map((w) => ({
+    areaName: getAreaName(w.areaId),
+    staffName: getStaffName(w.staffId),
+    staffId: w.staffId,
+  }));
+};
+
+const mapStaffStop = (r) => {
+  return r.map((w) => {
     return {
-      date: r.date,
-      staffWork,
-      staffStop,
+      staffName: getStaffName(w),
+      staffId: w,
     };
   });
+};
+
+module.exports = {
+  mapStaffWork,
+  mapStaffStop,
 };
