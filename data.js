@@ -182,8 +182,8 @@ const dbStaffLeave = [
     staffId: "2",
     vid: "5640",
     leaveTime: ["00:00", "05:00"],
-    leaveType: "MEETING",
-    // leaveType: "ANNUAL LEAVE",
+    // leaveType: "MEETING",
+    leaveType: "ANNUAL LEAVE",
   },
   // {
   //   date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),

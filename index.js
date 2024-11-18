@@ -8,6 +8,7 @@
 const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
+const autoStopV2 = require("./autoStopV2");
 const countStaff = require("./countStaff");
 const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
 const logUsage = require("./logUsage");

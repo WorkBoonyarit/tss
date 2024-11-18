@@ -6,6 +6,9 @@ const getAreaName = (areaId) => {
 const getStaffName = (staffId) => {
   return dbStaff.find((staff) => staff.id === staffId).staffName;
 };
+const getVidStaff = (staffId) => {
+  return dbStaff.find((staff) => staff.id === staffId).vid;
+};
 
 const mapStaffWork = (r) => {
   return r.map((w) => ({
@@ -26,6 +29,7 @@ const mapStaffStop = (r) => {
 
 module.exports = {
   getStaffName,
+  getVidStaff,
   getAreaName,
   mapStaffWork,
   mapStaffStop,

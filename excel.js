@@ -40,6 +40,10 @@ module.exports = async (results) => {
           ? "ANNUAL LEAVE"
           : "STOP",
       };
+
+      // return {
+      //   [staff.vid]: areaId ? getAreaName?.(areaId) : "STOP",
+      // };
     });
     const result = {};
 
