@@ -1,4 +1,4 @@
-const { exCludeArea, dbStaff } = require("./data");
+const { exCludeArea, dbStaff, dbStaffLeave } = require("./data");
 const writeXlsxFile = require("write-excel-file/node");
 const moment = require("moment");
 const { getStaffName, getAreaName } = require("./helper");
@@ -26,8 +26,19 @@ module.exports = async (results) => {
         data.find((s) => s.date === date && s.staffId === staff.id)?.areaId ||
         null;
 
+      const isAnnualLeave = dbStaffLeave.find(
+        (staffLeave) =>
+          staffLeave.date === date &&
+          staffLeave.staffId === staff.id &&
+          staffLeave.leaveType === "ANNUAL LEAVE"
+      );
+
       return {
-        [staff.vid]: areaId ? getAreaName?.(areaId) : "STOP",
+        [staff.vid]: areaId
+          ? getAreaName?.(areaId)
+          : isAnnualLeave
+          ? "ANNUAL LEAVE"
+          : "STOP",
       };
     });
     const result = {};

@@ -144,10 +144,6 @@ module.exports = () => {
         .startOf("months")
         .add(days, "days")
         .format("YYYY-MM-DD");
-      const tomorrowDate = moment()
-        .startOf("months")
-        .add(days + 1, "days")
-        .format("YYYY-MM-DD");
 
       showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
       const areaOpenLists = dbAreaOpens.find(

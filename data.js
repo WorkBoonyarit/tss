@@ -156,36 +156,49 @@ const dbStaffArea = settingArea.flatMap((s) => {
 });
 // ### steps (0) ###
 const dbStaffLeave = [
-  // {
-  //   date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
-  //   staffId: "4",
-  //   leaveTime: ["00:00", "23:00"],
-  //   leaveType: "ANNUAL LEAVE",
-  // },
   {
     date: moment().startOf("months").format("YYYY-MM-DD"),
     staffId: "1",
-    leaveTime: ["00:00", "05:00"],
+    vid: "1304",
+    leaveTime: ["00:00", "23:59"],
     leaveType: "ANNUAL LEAVE",
-  },
-  {
-    date: moment().startOf("months").format("YYYY-MM-DD"),
-    staffId: "3",
-    leaveTime: ["00:00", "09:00"],
-    leaveType: "MEETING",
   },
   {
     date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
     staffId: "3",
+    vid: "5215",
     leaveTime: ["00:00", "05:00"],
     leaveType: "MEETING",
   },
   {
     date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
     staffId: "8",
+    vid: "5666",
     leaveTime: ["00:00", "10:00"],
     leaveType: "MEETING",
   },
+  {
+    date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
+    staffId: "2",
+    vid: "5640",
+    leaveTime: ["00:00", "05:00"],
+    leaveType: "MEETING",
+    // leaveType: "ANNUAL LEAVE",
+  },
+  // {
+  //   date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
+  //   staffId: "4",
+  //   vid: "5533",
+  //   leaveTime: ["00:00", "23:00"],
+  //   leaveType: "ANNUAL LEAVE",
+  // },
+  // {
+  //   date: moment().startOf("months").add(2, "days").format("YYYY-MM-DD"),
+  //   staffId: "5",
+  //   vid: "5533",
+  //   leaveTime: ["00:00", "23:00"],
+  //   leaveType: "ANNUAL LEAVE",
+  // },
 ];
 
 // ### steps (1) ###

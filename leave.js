@@ -3,13 +3,6 @@ const moment = require("moment");
 
 module.exports = () => {
   const showLog = false;
-  // const bodyReq = {
-  //   staffId: "3",
-  //   staffVid: "5215",
-  //   leaveDate: "2024-11-03",
-  //   leaveTime: ["05:00", "09:00"],
-  //   leaveType: "MEETING",
-  // };
 
   const bodyReq = {
     staffId: "3",
@@ -116,7 +109,7 @@ module.exports = () => {
 
       showLog &&
         console.log(
-          `🍻 ~ staffInArea:::`,
+          `🟩 ~ พนักงานที่สามารถลงพื้นที่ได้ :::`,
           staffInPeriod
             .filter(
               (staff) =>
@@ -135,13 +128,11 @@ module.exports = () => {
         staffInArea,
       });
     });
-    showLog &&
-      console.log(`🍻 ~ พนักงานที่เหลือในแต่ละพื้นที่:::`, staffInAreaValidate);
+    console.log(`🎁🎁 ~ พนักงานที่เหลือในแต่ละพื้นที่:::`, staffInAreaValidate);
 
     console.log("✅ CAN LEAVE");
   } else {
-    showLog &&
-      console.log(`🍻 ~ พนักงานที่เหลือในแต่ละพื้นที่:::`, staffInAreaValidate);
+    console.log(`🎁🎁 ~ พนักงานที่เหลือในแต่ละพื้นที่:::`, staffInAreaValidate);
     //สามารถลาได้เลย
     console.log("✅ CAN LEAVE");
   }
