@@ -26,8 +26,8 @@ module.exports = () => {
   let staffOffHistory = [];
   const historyAllStop = {};
 
-  const findExceedQuotaWork = (arr, threshold = 3) => {
-    // 4 days
+  const findExceedQuotaWork = (arr, threshold = 4) => {
+    // 5 days
     const frequencyMap = new Map();
 
     arr.forEach((num) => {
