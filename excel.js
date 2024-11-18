@@ -27,7 +27,7 @@ module.exports = async (results) => {
         null;
 
       return {
-        [staff.id]: areaId ? getAreaName?.(areaId) : "STOP",
+        [staff.vid]: areaId ? getAreaName?.(areaId) : "STOP",
       };
     });
     const result = {};
@@ -52,15 +52,16 @@ module.exports = async (results) => {
     },
     ...dbStaff.map((staff) => {
       return {
-        column: staff.id,
+        column: staff.vid,
         type: String,
-        value: (data) => data?.[staff.id],
+        value: (data) => data?.[staff.vid],
       };
     }),
   ];
 
   await writeXlsxFile(objects, {
     schema,
-    filePath: `file-${Date.now()}.xlsx`,
+    // filePath: `file-${Date.now()}.xlsx`,
+    filePath: `file.xlsx`,
   });
 };

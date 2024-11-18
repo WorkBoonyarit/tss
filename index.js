@@ -46,12 +46,12 @@ const run = () => {
   countStaff();
   // validateLeave();
   const { results, historyAllStop } = retries(autoStop, retryTime - 1);
-  // excel(results);
-  results.forEach((r) => {
-    console.log(r.date);
-    console.table(mapStaffWork(r.staffWork));
-    console.table(mapStaffStop(r.staffStop));
-  });
+  excel(results);
+  // results.forEach((r) => {
+  //   console.log(r.date);
+  //   console.table(mapStaffWork(r.staffWork));
+  //   console.table(mapStaffStop(r.staffStop));
+  // });
   console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
   console.table(areaCannotAssign);
   console.log("วันหยุดของ staff จำนวนครั้ง");
