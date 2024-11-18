@@ -16,10 +16,10 @@ module.exports = () => {
 
   const results = [];
 
-  let staffOffYesterDay = []; // สำหรับเงื่อนไขทำงานอย่างต่อเนื่อง ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ
-  let staffWorkHistory = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน
-  let tempStaffWorkQuota = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน
-  let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน
+  let staffOffYesterDay = []; // สำหรับ ได้หยุดต่อเนื่อง 2 วัน ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ (ยกเว้นไม่มีคนจริงๆ)
+  let tempStaffWorkQuota = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน (เอา staff ที่เกิน 5 วันออกทุกกรณี)
+  let staffWorkHistory = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
+  let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
   const historyAllStop = {};
 
   const findExceedQuotaWork = (arr, threshold = 4) => {
