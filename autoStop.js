@@ -16,7 +16,7 @@ module.exports = () => {
 
   const results = [];
 
-  let staffOffYesterDay = []; // สำหรับ ได้หยุดต่อเนื่อง 2 วัน ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ (ยกเว้นไม่มีคนจริงๆ)
+  let staffLeaveYesterDayIds = []; // สำหรับ ได้หยุดต่อเนื่อง 2 วัน ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ (ยกเว้นไม่มีคนจริงๆ)
   let staffNotWorkExceedQuotaIds = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน (เอา staff ที่เกิน 5 วันออกทุกกรณี)
   let workStaffIds = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
   let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
@@ -107,7 +107,7 @@ module.exports = () => {
       return resultPick;
     } else {
       const nextCandidateStaff = staffInQuota.filter(
-        (staff) => !staffOffYesterDay.includes(staff)
+        (staff) => !staffLeaveYesterDayIds.includes(staff)
       );
       const msg = "พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน คงเหลือ";
       return shuffleStaff(staffInQuota, nextCandidateStaff, msg, true, "🟢");
@@ -134,18 +134,17 @@ module.exports = () => {
       const staffLeaveList = dbStaffLeave.filter(
         (staff) => staff.date === nowDate
       );
-      const staffIds = dbStaff.map((staff) => staff.id);
 
-      const inDayStaffWork = [];
+      const tempStaffWorkIds = [];
 
       areaOpenLists.forEach((areaOpen) => {
         showLog &&
           console.log(
             `🍻 ~ ^^^^^^^^^^^^^^^^^^ พื้นที่ ::: ${areaOpen}  ::: ^^^^^^^^^^^^^^^^^^`
           );
-        const inDayStaffWorkIds = inDayStaffWork.map((wl) => wl.staffId);
+        const todayStaffWorkIds = tempStaffWorkIds.map((wl) => wl.staffId);
         showLog &&
-          console.log(`🍻 ~ พนักงานที่ได้พื้นที่ไปแล้ว:::`, inDayStaffWorkIds);
+          console.log(`🍻 ~ พนักงานที่ได้พื้นที่ไปแล้ว:::`, todayStaffWorkIds);
         showLog &&
           console.log(
             `📍  พนักงานที่เลือกพื้นที่นี้ไว้ `,
@@ -189,7 +188,7 @@ module.exports = () => {
             (staffArea) =>
               staffArea.areaId === areaOpen &&
               staffArea.period === nowPeriod &&
-              !inDayStaffWorkIds.includes(staffArea.staffId) &&
+              !todayStaffWorkIds.includes(staffArea.staffId) &&
               !staffNotAvailable.includes(staffArea.staffId)
           )
           .map((staff) => staff.staffId);
@@ -208,33 +207,35 @@ module.exports = () => {
         }
 
         showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
-        inDayStaffWork.push({ areaId: areaOpen, staffId: theChosenOne });
+        tempStaffWorkIds.push({ areaId: areaOpen, staffId: theChosenOne });
       });
 
-      const inDayStaffWorkIds = inDayStaffWork.map((wl) => wl.staffId);
-      const staffStop = lodash.difference(staffIds, inDayStaffWorkIds);
+      const todayStaffWorkIds = tempStaffWorkIds.map((wl) => wl.staffId);
+
+      const staffIds = dbStaff.map((staff) => staff.id);
+      const staffStop = lodash.difference(staffIds, todayStaffWorkIds);
 
       showLog &&
         console.log(
-          `🍻 ~ ผลลัพธ์::: ${JSON.stringify(inDayStaffWork, null, 2)}`
+          `🍻 ~ ผลลัพธ์::: ${JSON.stringify(tempStaffWorkIds, null, 2)}`
         );
       showLog && console.log(`🎁 ~ พนักงานที่ได้หยุด ::: ${staffStop}`);
 
-      staffOffYesterDay = staffStop;
+      staffLeaveYesterDayIds = staffStop;
       workStaffIds = workStaffIds.filter((staff) => !staffStop.includes(staff));
       staffNotWorkExceedQuotaIds = staffNotWorkExceedQuotaIds.filter(
         (staff) => !staffStop.includes(staff)
       );
 
       leaveStaffIds = [...leaveStaffIds, ...staffStop];
-      workStaffIds = [...workStaffIds, ...inDayStaffWorkIds];
+      workStaffIds = [...workStaffIds, ...todayStaffWorkIds];
       staffNotWorkExceedQuotaIds = [
         ...staffNotWorkExceedQuotaIds,
-        ...inDayStaffWorkIds,
+        ...todayStaffWorkIds,
       ];
 
       // reports
-      results.push({ date: nowDate, staffWork: inDayStaffWork, staffStop });
+      results.push({ date: nowDate, staffWork: tempStaffWorkIds, staffStop });
 
       staffStop?.forEach?.((staff) => {
         historyAllStop[staff] = {
