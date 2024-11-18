@@ -14,16 +14,12 @@ module.exports = () => {
   const showLog = false;
   const nowPeriod = moment().format("YYYY-MM");
 
-  // query database
-  let staffLists = [...dbStaff];
-  // staffLists = lodash.shuffle(staffLists);
-
   const results = [];
 
-  let staffOffYesterDay = [];
-  let staffWorkHistory = [];
-  let tempStaffWorkQuota = [];
-  let staffOffHistory = [];
+  let staffOffYesterDay = []; // สำหรับเงื่อนไขทำงานอย่างต่อเนื่อง ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ
+  let staffWorkHistory = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน
+  let tempStaffWorkQuota = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน
+  let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน
   const historyAllStop = {};
 
   const findExceedQuotaWork = (arr, threshold = 4) => {
@@ -70,27 +66,27 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (days, candidateStaff, staffExceedWorkQuota) => {
+  const getOverTwoDaysLeave = () => {
+    return lodash.uniq(duplicates([...leaveStaffIds]));
+  };
+
+  const pickStaff = (days, candidateStaff) => {
+    let staffOverLeave = getOverTwoDaysLeave();
+    const staffExceedWorkQuota = findExceedQuotaWork(tempStaffWorkQuota);
     let staffInQuota = candidateStaff.filter(
       (staff) => !staffExceedWorkQuota.includes(staff)
     );
+    let staffPickFirst = lodash.uniq([...staffOverLeave, ...staffWorkHistory]);
 
-    let staffOutOfQuotaStop = lodash.uniq(duplicates([...staffOffHistory]));
     showLog &&
-      console.log(
-        `🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`,
-        staffOutOfQuotaStop
-      );
-
+      console.log(`🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`, staffExceedWorkQuota);
+    showLog &&
+      console.log(`🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`, staffOverLeave);
     showLog &&
       console.log(
         `🍻 ~ พนักงานที่ได้ทำงานในวันที่ผ่านมา :::`,
         staffWorkHistory
       );
-    let staffPickFirst = lodash.uniq([
-      ...staffOutOfQuotaStop,
-      ...staffWorkHistory,
-    ]);
     showLog &&
       console.log(`🍻 ~ ต้องเลือกพนักงานกลุ่มนี้ก่อน:::`, staffPickFirst);
 
@@ -110,21 +106,7 @@ module.exports = () => {
       staffWorkHistory = staffWorkHistory.filter(
         (staff) => staff !== resultPick
       );
-      staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
-      return resultPick;
-    } else if (staffOutOfQuotaStop.length > 0) {
-      const nextCandidateStaff = staffInQuota.filter((staff) =>
-        staffOutOfQuotaStop.includes(staff)
-      );
-      const msg = "พนักงานที่ได้หยุดครบ 2 วันแล้ว";
-      const resultPick = shuffleStaff(
-        staffInQuota,
-        nextCandidateStaff,
-        msg,
-        true,
-        "🟠"
-      );
-      staffOffHistory = staffOffHistory.filter((staff) => staff !== resultPick);
+      leaveStaffIds = leaveStaffIds.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
       const nextCandidateStaff = staffInQuota.filter(
@@ -155,15 +137,7 @@ module.exports = () => {
       const staffLeaveList = dbStaffLeave.filter(
         (staff) => staff.date === nowDate
       );
-      const staffListsIds = staffLists.map((staff) => staff.id);
-      const staffAnnualLeave = staffLeaveList
-        .filter((staffLeave) => staffLeave.leaveType === "ANNUAL LEAVE")
-        .map((staff) => staff.staffId);
-
-      const staffDoNotTakeLeave = lodash.difference(
-        staffListsIds,
-        staffAnnualLeave
-      );
+      const staffListsIds = dbStaff.map((staff) => staff.id);
 
       const workLists = [];
 
@@ -189,9 +163,10 @@ module.exports = () => {
         const areaTime = dbArea.find((area) => area.id === areaOpen)?.areaTime;
         showLog && console.log(`🍻 ~ เวลาเข้าเวรของพื้นที่นี้:::`, areaTime);
 
-        const staffLeaveMeeting = staffLeaveList
-          .filter((staffLeave) => staffLeave.leaveType === "MEETING")
+        const staffNotAvailable = staffLeaveList
           .filter((staffLeave) => {
+            const isLeaveAnnual = staffLeave.leaveType === "ANNUAL LEAVE";
+            const isLeaveMeeting = staffLeave.leaveType === "MEETING";
             const isLeaveInAreaTime =
               staffLeave.leaveTime[1] > areaTime[0] &&
               staffLeave.leaveTime[0] < areaTime[1];
@@ -199,14 +174,17 @@ module.exports = () => {
             const isLeaveEqualAreaTime =
               staffLeave.leaveTime[0] === areaTime[0] &&
               staffLeave.leaveTime[1] === areaTime[1];
-            return isLeaveInAreaTime || isLeaveEqualAreaTime;
+            return (
+              isLeaveAnnual ||
+              (isLeaveMeeting && (isLeaveInAreaTime || isLeaveEqualAreaTime))
+            );
           })
           .map((staffLeave) => staffLeave.staffId);
 
         showLog &&
           console.log(
-            `💤 ~ พนักงานที่ลาในช่วงเวลาของพื้นที่นั้นๆ:::`,
-            staffLeaveMeeting
+            `💤 ~ พนักงานที่ไม่สามารถทำงานในพื้นที่นี้ได้:::`,
+            staffNotAvailable
           );
 
         const candidateStaff = dbStaffArea
@@ -214,9 +192,8 @@ module.exports = () => {
             (staffArea) =>
               staffArea.areaId === areaOpen &&
               staffArea.period === nowPeriod &&
-              staffDoNotTakeLeave.includes(staffArea.staffId) &&
               !workListsStaffIds.includes(staffArea.staffId) &&
-              !staffLeaveMeeting.includes(staffArea.staffId)
+              !staffNotAvailable.includes(staffArea.staffId)
           )
           .map((staff) => staff.staffId);
 
@@ -226,18 +203,7 @@ module.exports = () => {
             candidateStaff
           );
 
-        const staffExceedWorkQuota = findExceedQuotaWork(tempStaffWorkQuota);
-        showLog &&
-          console.log(
-            `🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`,
-            staffExceedWorkQuota
-          );
-
-        const theChosenOne = pickStaff(
-          days,
-          candidateStaff,
-          staffExceedWorkQuota
-        );
+        const theChosenOne = pickStaff(days, candidateStaff);
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
@@ -249,16 +215,14 @@ module.exports = () => {
       });
 
       const workListsStaffIds = workLists.map((wl) => wl.staffId);
-      const staffStop = lodash.difference(
-        staffDoNotTakeLeave,
-        workListsStaffIds
-      );
+      const staffStop = lodash.difference(staffListsIds, workListsStaffIds);
 
       showLog &&
         console.log(`🍻 ~ ผลลัพธ์::: ${JSON.stringify(workLists, null, 2)}`);
       showLog && console.log(`🎁 ~ พนักงานที่ได้หยุด ::: ${staffStop}`);
-      results.push({ date: nowDate, staffWork: workLists, staffStop });
+
       staffOffYesterDay = staffStop;
+
       staffWorkHistory = staffWorkHistory.filter(
         (staff) => !staffStop.includes(staff)
       );
@@ -267,9 +231,12 @@ module.exports = () => {
         (staff) => !staffStop.includes(staff)
       );
 
-      staffOffHistory = [...staffOffHistory, ...staffStop];
+      leaveStaffIds = [...leaveStaffIds, ...staffStop];
       staffWorkHistory = [...staffWorkHistory, ...workListsStaffIds];
       tempStaffWorkQuota = [...tempStaffWorkQuota, ...workListsStaffIds];
+
+      // reports
+      results.push({ date: nowDate, staffWork: workLists, staffStop });
 
       staffStop?.forEach?.((staff) => {
         historyAllStop[staff] = {

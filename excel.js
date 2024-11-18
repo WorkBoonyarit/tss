@@ -37,7 +37,7 @@ module.exports = async (results) => {
         [staff.vid]: areaId
           ? getAreaName?.(areaId)
           : isAnnualLeave
-          ? "ANNUAL LEAVE"
+          ? "##Annual Leave"
           : "STOP",
       };
 
