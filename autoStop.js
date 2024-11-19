@@ -67,7 +67,6 @@ module.exports = () => {
 
   const pickStaff = (candidateStaff) => {
     let staffOverLeave = getOverTwoDaysLeave();
-    const isShuffle = staffOverLeave.length > 0;
     const staffExceedWorkQuota = findExceedQuotaWork(
       staffNotWorkExceedQuotaIds
     );
@@ -96,7 +95,7 @@ module.exports = () => {
         staffInQuota,
         nextCandidateStaff,
         msg,
-        isShuffle,
+        false,
         "🔵"
       );
       workStaffIds = workStaffIds.filter((staff) => staff !== resultPick);
