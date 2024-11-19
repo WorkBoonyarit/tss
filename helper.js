@@ -1,4 +1,5 @@
 const { dbArea, dbStaff } = require("./data");
+// const { dbArea, dbStaff } = require("./dataFull");
 
 const getAreaName = (areaId) => {
   return dbArea.find((area) => area.id === areaId).areaName;

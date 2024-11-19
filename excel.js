@@ -1,4 +1,5 @@
 const { exCludeArea, dbStaff, dbStaffLeave } = require("./data");
+// const { exCludeArea, dbStaff, dbStaffLeave } = require("./dataFull");
 const writeXlsxFile = require("write-excel-file/node");
 const moment = require("moment");
 const { getStaffName, getAreaName } = require("./helper");

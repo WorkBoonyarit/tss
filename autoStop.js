@@ -6,6 +6,14 @@ const {
   dbStaffArea,
   dbStaff,
 } = require("./data");
+// const {
+//   dbArea,
+//   dbAreaOpens,
+//   exCludeArea,
+//   dbStaffLeave,
+//   dbStaffArea,
+//   dbStaff,
+// } = require("./dataFull");
 const moment = require("moment");
 const lodash = require("lodash");
 const mapping = require("./helper");
@@ -36,6 +44,9 @@ module.exports = () => {
 
     return result;
   };
+  const getOverTwoDaysLeave = () => {
+    return lodash.uniq(duplicates([...leaveStaffIds]));
+  };
 
   const duplicates = (arr) =>
     arr.filter((item, index) => arr.indexOf(item) !== index);
@@ -64,10 +75,6 @@ module.exports = () => {
         );
       return lodash.shuffle(candidateStaff)[0];
     }
-  };
-
-  const getOverTwoDaysLeave = () => {
-    return lodash.uniq(duplicates([...leaveStaffIds]));
   };
 
   const pickStaff = (days, candidateStaff) => {

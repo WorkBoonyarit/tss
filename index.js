@@ -5,10 +5,8 @@
  * 3. มาดูเรื่องของ auto วันหยุดให้พนักงาน ในกรณีที่พนักงานมีมากกว่าพื้นที่ ที่เปิด
  */
 
-const { areaOpens } = require("./data");
 const validateLeave = require("./leave");
 const autoStop = require("./autoStop");
-const autoStopV2 = require("./autoStopV2");
 const countStaff = require("./countStaff");
 const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
 const logUsage = require("./logUsage");
