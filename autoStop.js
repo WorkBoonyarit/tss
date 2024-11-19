@@ -11,17 +11,40 @@ module.exports = () => {
 
   const results = [];
 
+  let staffWorkInYesterDay = []; // สำหรับเงื่อนไข ห่างจากเวรที่แล้ว 12 ชั่วโมง (ยกเว้นไม่มีคนจริงๆ)
   let staffLeaveYesterDayIds = []; // สำหรับ ได้หยุดต่อเนื่อง 2 วัน ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ (ยกเว้นไม่มีคนจริงๆ)
   let staffNotWorkExceedQuotaIds = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน (เอา staff ที่เกิน 5 วันออกทุกกรณี)
   let workStaffIds = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
   let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
   const historyAllStop = {};
 
-  const findExceedQuotaWork = (arr, threshold = 4) => {
+  const getAreaTime = (areaOpen) => {
+    return dbArea.find((area) => area.id === areaOpen)?.areaTime;
+  };
+
+  const findStaffInTwelveHrs = (areaTime) => {
+    const startTime = areaTime[0];
+    return staffWorkInYesterDay
+      .filter((staffArea) => {
+        const [endTime] = getAreaTime(staffArea.areaId);
+        const [hrs, min] = endTime.split(":");
+        const nextTimeCanWork = moment()
+          .set("hours", hrs)
+          .set("minutes", min)
+          .set("seconds", 0)
+          .add(12, "hours")
+          .format("HH:mm");
+
+        return nextTimeCanWork <= startTime;
+      })
+      .map((staff) => staff.staffId);
+  };
+
+  const findExceedQuotaWork = (threshold = 4) => {
     // 5 days
     const frequencyMap = new Map();
 
-    arr.forEach((num) => {
+    staffNotWorkExceedQuotaIds.forEach((num) => {
       frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
     });
 
@@ -65,7 +88,7 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (candidateStaff) => {
+  const pickStaff = (candidateStaff, staffInTwelveHrs) => {
     let staffOverLeave = getOverTwoDaysLeave();
 
     let staffPickFirst = lodash.uniq([...staffOverLeave, ...workStaffIds]);
@@ -96,7 +119,9 @@ module.exports = () => {
       return resultPick;
     } else {
       const nextCandidateStaff = candidateStaff.filter(
-        (staff) => !staffLeaveYesterDayIds.includes(staff)
+        (staff) =>
+          !staffLeaveYesterDayIds.includes(staff) &&
+          !staffInTwelveHrs.includes(staff)
       );
       showLog &&
         console.log(
@@ -134,14 +159,14 @@ module.exports = () => {
         (staff) => staff.date === nowDate
       );
 
-      const tempStaffWorkIds = [];
+      const tempStaffWork = [];
 
       areaOpenLists.forEach((areaOpen) => {
         showLog &&
           console.log(
             `🍻 ~ ^^^^^^^^^^^^^^^^^^ พื้นที่ ::: ${areaOpen}  ::: ^^^^^^^^^^^^^^^^^^`
           );
-        const todayStaffWorkIds = tempStaffWorkIds.map((wl) => wl.staffId);
+        const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
         showLog &&
           console.log(`🍻 ~ พนักงานที่ได้พื้นที่ไปแล้ว:::`, todayStaffWorkIds);
         showLog &&
@@ -155,7 +180,7 @@ module.exports = () => {
               .map((staff) => staff.staffId)
           );
 
-        const areaTime = dbArea.find((area) => area.id === areaOpen)?.areaTime;
+        const areaTime = getAreaTime(areaOpen);
         showLog && console.log(`🍻 ~ เวลาเข้าเวรของพื้นที่นี้:::`, areaTime);
 
         const staffNotAvailable = staffLeaveInToday
@@ -193,13 +218,11 @@ module.exports = () => {
 
         showLog &&
           console.log(
-            `📍  พนักงานที่เลือกพื้นที่นี้ไว้  และว่าง ✅`,
+            `📍  พนักงานที่เลือกพื้นที่นี้ไว้และไม่ได้ลาชนกับช่วงเวลาพื้นที่`,
             staffCanWorkInArea
           );
 
-        const staffExceedWorkQuota = findExceedQuotaWork(
-          staffNotWorkExceedQuotaIds
-        );
+        const staffExceedWorkQuota = findExceedQuotaWork();
 
         showLog &&
           console.log(
@@ -207,10 +230,18 @@ module.exports = () => {
             staffExceedWorkQuota
           );
 
+        const staffInTwelveHrs = findStaffInTwelveHrs(areaTime);
+        showLog &&
+          console.log(
+            `🍻 ~ เงื่อนไข 12 ชั่วโมงจากเวรที่แล้ว:::`,
+            staffInTwelveHrs
+          );
+
         const candidateStaff = staffCanWorkInArea.filter(
           (staffId) =>
             !todayStaffWorkIds.includes(staffId) &&
             !staffExceedWorkQuota.includes(staffId)
+          // && !staffInTwelveHrs.includes(staffId)
         );
 
         showLog &&
@@ -219,7 +250,7 @@ module.exports = () => {
             candidateStaff
           );
 
-        const theChosenOne = pickStaff(candidateStaff);
+        const theChosenOne = pickStaff(candidateStaff, staffInTwelveHrs);
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
@@ -227,10 +258,10 @@ module.exports = () => {
         }
 
         showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
-        tempStaffWorkIds.push({ areaId: areaOpen, staffId: theChosenOne });
+        tempStaffWork.push({ areaId: areaOpen, staffId: theChosenOne });
       });
 
-      const todayStaffWorkIds = tempStaffWorkIds.map((wl) => wl.staffId);
+      const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
 
       const staffAnnualLeaveInToday = staffLeaveInToday
         .filter((staffLeave) => staffLeave.leaveType === "ANNUAL LEAVE")
@@ -246,14 +277,14 @@ module.exports = () => {
 
       showLog &&
         console.log(
-          `🍻 ~ ผลลัพธ์::: ${JSON.stringify(tempStaffWorkIds, null, 2)}`
+          `🍻 ~ ผลลัพธ์::: ${JSON.stringify(tempStaffWork, null, 2)}`
         );
       showLog &&
         console.log(
           `🎁 ~ พนักงานที่ลาหยุดประจำปี ::: ${staffAnnualLeaveInToday}`
         );
       showLog && console.log(`🎁 ~ พนักงานที่ได้หยุด ::: ${staffStopIds}`);
-
+      staffWorkInYesterDay = tempStaffWork;
       staffLeaveYesterDayIds = staffStopAllCaseIds;
       workStaffIds = workStaffIds.filter(
         (staff) => !staffStopAllCaseIds.includes(staff)
@@ -272,7 +303,7 @@ module.exports = () => {
       // reports
       results.push({
         date: nowDate,
-        staffWork: tempStaffWorkIds,
+        staffWork: tempStaffWork,
         staffStopIds,
       });
 

@@ -17,14 +17,14 @@ const dbArea = [
   {
     id: "1",
     areaName: "ดินแดง",
-    areaTime: ["09:00", "19:00"],
+    areaTime: ["12:00", "22:00"],
     areaType: "NORMAL",
   },
   {
     id: "2",
     areaName: "ดินแดง (บ่าย)",
-    areaTime: ["09:00", "19:00"],
-    areaType: "NIGHT",
+    areaTime: ["12:00", "22:00"],
+    areaType: "NORMAL",
   },
   {
     id: "3",
