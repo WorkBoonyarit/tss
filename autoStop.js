@@ -1,19 +1,6 @@
-const {
-  dbArea,
-  dbAreaOpens,
-  exCludeArea,
-  dbStaffLeave,
-  dbStaffArea,
-  dbStaff,
-} = require("./data");
-// const {
-//   dbArea,
-//   dbAreaOpens,
-//   exCludeArea,
-//   dbStaffLeave,
-//   dbStaffArea,
-//   dbStaff,
-// } = require("./dataFull");
+const isDev = require("./isDev");
+const { dbArea, dbAreaOpens, exCludeArea, dbStaffLeave, dbStaffArea, dbStaff } =
+  isDev ? require("./data") : require("./dataFull");
 const moment = require("moment");
 const lodash = require("lodash");
 const mapping = require("./helper");
