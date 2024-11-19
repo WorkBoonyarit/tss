@@ -1,5 +1,7 @@
-const { dbStaffArea, dbArea } = require("./data");
-// const { dbStaffArea, dbArea } = require("./dataFull");
+const isDev = require("./isDev");
+const { dbStaffArea, dbArea } = isDev
+  ? require("./data")
+  : require("./dataFull");
 
 module.exports = () => {
   const staffCounting = dbArea
