@@ -67,16 +67,9 @@ module.exports = () => {
 
   const pickStaff = (candidateStaff) => {
     let staffOverLeave = getOverTwoDaysLeave();
-    const staffExceedWorkQuota = findExceedQuotaWork(
-      staffNotWorkExceedQuotaIds
-    );
-    let staffInQuota = candidateStaff.filter(
-      (staff) => !staffExceedWorkQuota.includes(staff)
-    );
+
     let staffPickFirst = lodash.uniq([...staffOverLeave, ...workStaffIds]);
 
-    showLog &&
-      console.log(`🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`, staffExceedWorkQuota);
     showLog &&
       console.log(`🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`, staffOverLeave);
     showLog &&
@@ -86,13 +79,13 @@ module.exports = () => {
 
     if (staffPickFirst.length > 0) {
       const nextCandidateStaff = staffPickFirst.filter((staff) =>
-        staffInQuota.includes(staff)
+        candidateStaff.includes(staff)
       );
 
       const msg =
         "พนักงานที่สามารถทำงานต่อเนื่องได้ หรือ พนักงานที่หยุดเกิน 2 วัน";
       const resultPick = shuffleStaff(
-        staffInQuota,
+        candidateStaff,
         nextCandidateStaff,
         msg,
         false,
@@ -102,7 +95,7 @@ module.exports = () => {
       leaveStaffIds = leaveStaffIds.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
-      const nextCandidateStaff = staffInQuota.filter(
+      const nextCandidateStaff = candidateStaff.filter(
         (staff) => !staffLeaveYesterDayIds.includes(staff)
       );
       showLog &&
@@ -116,7 +109,7 @@ module.exports = () => {
           nextCandidateStaff
         );
       const msg = "พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน คงเหลือ";
-      return shuffleStaff(staffInQuota, nextCandidateStaff, msg, true, "🟢");
+      return shuffleStaff(candidateStaff, nextCandidateStaff, msg, true, "🟢");
     }
   };
 
@@ -204,8 +197,20 @@ module.exports = () => {
             staffCanWorkInArea
           );
 
+        const staffExceedWorkQuota = findExceedQuotaWork(
+          staffNotWorkExceedQuotaIds
+        );
+
+        showLog &&
+          console.log(
+            `🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`,
+            staffExceedWorkQuota
+          );
+
         const candidateStaff = staffCanWorkInArea.filter(
-          (staffId) => !todayStaffWorkIds.includes(staffId)
+          (staffId) =>
+            !todayStaffWorkIds.includes(staffId) &&
+            !staffExceedWorkQuota.includes(staffId)
         );
 
         showLog &&
