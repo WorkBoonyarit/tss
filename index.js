@@ -21,6 +21,9 @@ const retries = (fn, times) => {
     // console.log("ERROR :: ", error);
     const match = error.toString().match(/\(([^)]+)\)/);
     const area = match ? match[1] : null;
+    if (!area) {
+      console.log("ERROR :: ", error);
+    }
     areaCannotAssign[area] = {
       areaId: area,
       areaName: getAreaName(area),
@@ -49,7 +52,7 @@ const run = () => {
   // results.forEach((r) => {
   //   console.log(r.date);
   //   console.table(mapStaffWork(r.staffWork));
-  //   console.table(mapStaffStop(r.staffStop));
+  //   console.table(mapStaffStop(r.staffStopIds));
   // });
   console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
   console.table(areaCannotAssign);

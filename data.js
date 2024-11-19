@@ -63,7 +63,7 @@ const settingArea = [
   {
     period: "2024-11",
     staffId: "1",
-    areaIds: ["1", "2", "3", "7"],
+    areaIds: ["1", "2", "3", "5", "7"],
   },
   {
     period: "2024-11",
