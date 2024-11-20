@@ -17,6 +17,7 @@ module.exports = () => {
   let workStaffIds = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
   let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
   const historyAllStop = {};
+  const retrySemiTime = 10;
 
   const getAreaTime = (areaOpen) => {
     return dbArea.find((area) => area.id === areaOpen)?.areaTime;
@@ -119,9 +120,8 @@ module.exports = () => {
       return resultPick;
     } else {
       const nextCandidateStaff = candidateStaff.filter(
-        (staff) =>
-          !staffLeaveYesterDayIds.includes(staff) &&
-          !staffInTwelveHrs.includes(staff)
+        (staff) => !staffLeaveYesterDayIds.includes(staff)
+        // && !staffInTwelveHrs.includes(staff)
       );
       showLog &&
         console.log(
@@ -145,6 +145,7 @@ module.exports = () => {
     timeRetries
   ) => {
     try {
+      console.log(`🍻 ~ nowDate:::`, nowDate);
       const tempStaffWork = [];
       areaOpenLists.forEach((areaOpen) => {
         showLog &&
@@ -225,8 +226,8 @@ module.exports = () => {
         const candidateStaff = staffCanWorkInArea.filter(
           (staffId) =>
             !todayStaffWorkIds.includes(staffId) &&
-            !staffExceedWorkQuota.includes(staffId)
-          // && !staffInTwelveHrs.includes(staffId)
+            !staffExceedWorkQuota.includes(staffId) &&
+            !staffInTwelveHrs.includes(staffId)
         );
 
         showLog &&
@@ -249,7 +250,11 @@ module.exports = () => {
       return tempStaffWork;
     } catch (error) {
       if (timeRetries >= 0) {
-        console.log(`========  RETRY AUTO (${timeRetries}) ========`);
+        console.log(
+          `========  RETRY ${nowDate} ภายในวัน (${
+            retrySemiTime - timeRetries
+          }) ========`
+        );
         return autoAssignArea(
           nowDate,
           areaOpenLists,
@@ -287,7 +292,7 @@ module.exports = () => {
         nowDate,
         areaOpenLists,
         staffLeaveInToday,
-        10
+        retrySemiTime
       );
 
       const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
