@@ -138,29 +138,14 @@ module.exports = () => {
     }
   };
 
-  Array(exCludeArea.length)
-    .fill("")
-    .forEach((_, days) => {
-      showLog &&
-        console.log(`🍻 ~ =================================================:`);
-      const nowDate = moment()
-        .startOf("months")
-        .add(days, "days")
-        .format("YYYY-MM-DD");
-
-      showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
-      const areaOpenLists = dbAreaOpens.find(
-        (areaOpen) => areaOpen.date === nowDate
-      ).areaIds;
-
-      showLog && console.log(`🍻 ~ พื้นที่ที่เปิด::: ${areaOpenLists}`);
-
-      const staffLeaveInToday = dbStaffLeave.filter(
-        (staff) => staff.date === nowDate
-      );
-
+  const autoAssignArea = (
+    nowDate,
+    areaOpenLists,
+    staffLeaveInToday,
+    timeRetries
+  ) => {
+    try {
       const tempStaffWork = [];
-
       areaOpenLists.forEach((areaOpen) => {
         showLog &&
           console.log(
@@ -260,6 +245,50 @@ module.exports = () => {
         showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
         tempStaffWork.push({ areaId: areaOpen, staffId: theChosenOne });
       });
+
+      return tempStaffWork;
+    } catch (error) {
+      if (timeRetries >= 0) {
+        console.log(`========  RETRY AUTO (${timeRetries}) ========`);
+        return autoAssignArea(
+          nowDate,
+          areaOpenLists,
+          staffLeaveInToday,
+          timeRetries - 1
+        );
+      } else {
+        throw new Error(error?.message || "");
+      }
+    }
+  };
+
+  Array(exCludeArea.length)
+    .fill("")
+    .forEach((_, days) => {
+      showLog &&
+        console.log(`🍻 ~ =================================================:`);
+      const nowDate = moment()
+        .startOf("months")
+        .add(days, "days")
+        .format("YYYY-MM-DD");
+
+      showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
+      const areaOpenLists = dbAreaOpens.find(
+        (areaOpen) => areaOpen.date === nowDate
+      ).areaIds;
+
+      showLog && console.log(`🍻 ~ พื้นที่ที่เปิด::: ${areaOpenLists}`);
+
+      const staffLeaveInToday = dbStaffLeave.filter(
+        (staff) => staff.date === nowDate
+      );
+
+      const tempStaffWork = autoAssignArea(
+        nowDate,
+        areaOpenLists,
+        staffLeaveInToday,
+        10
+      );
 
       const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
 
