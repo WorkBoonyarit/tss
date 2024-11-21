@@ -3,10 +3,10 @@ const { dbArea, dbAreaOpens, exCludeArea, dbStaffLeave, dbStaffArea, dbStaff } =
   isDev ? require("./data") : require("./dataFull");
 const moment = require("moment");
 const lodash = require("lodash");
-const mapping = require("./helper");
+const { getAreaTime } = require("./helper");
 
 module.exports = () => {
-  const showLog = false;
+  const showLog = true;
   const nowPeriod = moment().format("YYYY-MM");
 
   const results = [];
@@ -18,28 +18,6 @@ module.exports = () => {
   let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
   const historyAllStop = {};
   const retrySemiTime = 10;
-
-  const getAreaTime = (areaOpen) => {
-    return dbArea.find((area) => area.id === areaOpen)?.areaTime;
-  };
-
-  const findStaffInTwelveHrs = (areaTime) => {
-    const startTime = areaTime[0];
-    return staffWorkInYesterDay
-      .filter((staffArea) => {
-        const [endTime] = getAreaTime(staffArea.areaId);
-        const [hrs, min] = endTime.split(":");
-        const nextTimeCanWork = moment()
-          .set("hours", hrs)
-          .set("minutes", min)
-          .set("seconds", 0)
-          .add(12, "hours")
-          .format("HH:mm");
-
-        return nextTimeCanWork <= startTime;
-      })
-      .map((staff) => staff.staffId);
-  };
 
   const findExceedQuotaWork = (threshold = 4) => {
     // 5 days
@@ -89,7 +67,7 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (candidateStaff, staffInTwelveHrs) => {
+  const pickStaff = (candidateStaff) => {
     let staffOverLeave = getOverTwoDaysLeave();
 
     let staffPickFirst = lodash.uniq([...staffOverLeave, ...workStaffIds]);
@@ -119,9 +97,9 @@ module.exports = () => {
       leaveStaffIds = leaveStaffIds.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
+      //เงื่อนไขที่ยอมกันได้ ไม่ต้อง 100%
       const nextCandidateStaff = candidateStaff.filter(
         (staff) => !staffLeaveYesterDayIds.includes(staff)
-        // && !staffInTwelveHrs.includes(staff)
       );
       showLog &&
         console.log(
@@ -216,18 +194,11 @@ module.exports = () => {
             staffExceedWorkQuota
           );
 
-        const staffInTwelveHrs = findStaffInTwelveHrs(areaTime);
-        showLog &&
-          console.log(
-            `🍻 ~ เงื่อนไข 12 ชั่วโมงจากเวรที่แล้ว:::`,
-            staffInTwelveHrs
-          );
-
+        // เงื่อนไขที่ยอมไม่ได้ ต้อง 100%
         const candidateStaff = staffCanWorkInArea.filter(
           (staffId) =>
             !todayStaffWorkIds.includes(staffId) &&
-            !staffExceedWorkQuota.includes(staffId) &&
-            !staffInTwelveHrs.includes(staffId)
+            !staffExceedWorkQuota.includes(staffId)
         );
 
         showLog &&
@@ -236,7 +207,7 @@ module.exports = () => {
             candidateStaff
           );
 
-        const theChosenOne = pickStaff(candidateStaff, staffInTwelveHrs);
+        const theChosenOne = pickStaff(candidateStaff);
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
