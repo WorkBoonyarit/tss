@@ -4,7 +4,7 @@ const moment = require('moment');
 
 module.exports = () => {
   const showLog = false;
-  const minStopPerMonth = 20; //หยุดได้ขั้นต่ำ 7 ครั้ง / เดือน (มีผลกับ percent เฉยๆ)
+  const minStopPerMonth = (exCludeArea.length / 30) * 10; // คูณเยอะจะยิ่งทำให้หยุดถี่ขึ้น
   const maxStop = 2; // หยุดต่อกันได้มากสุด 2 ครั้ง
   const minToWork = 2; // ทำงานต่อเนื่องขั้นต่ำ 2 วัน / รอบการทำงาน
   const maxToWork = 5; // ทำงานมากสุด 5 วัน / รอบการทำงาน
