@@ -6,7 +6,7 @@
  */
 
 const validateLeave = require("./leave");
-const autoStop = require("./autoStop");
+const autoAssignArea = require("./autoAssignArea");
 const countStaff = require("./countStaff");
 const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
 const logUsage = require("./logUsage");
@@ -47,7 +47,7 @@ const run = () => {
 
   countStaff();
   // validateLeave();
-  const { results, historyAllStop } = retries(autoStop, retryTime - 1);
+  const { results, historyAllStop } = retries(autoAssignArea, retryTime - 1);
   excel(results);
   // results.forEach((r) => {
   //   console.log(r.date);
