@@ -3,10 +3,10 @@ const { dbArea, dbAreaOpens, exCludeArea, dbStaffLeave, dbStaffArea, dbStaff } =
   isDev ? require("./data") : require("./dataFull");
 const moment = require("moment");
 const lodash = require("lodash");
-const mapping = require("./helper");
+const { getAreaTime } = require("./helper");
 
 module.exports = () => {
-  const showLog = false;
+  const showLog = true;
   const nowPeriod = moment().format("YYYY-MM");
 
   const results = [];
@@ -17,28 +17,7 @@ module.exports = () => {
   let workStaffIds = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
   let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
   const historyAllStop = {};
-
-  const getAreaTime = (areaOpen) => {
-    return dbArea.find((area) => area.id === areaOpen)?.areaTime;
-  };
-
-  const findStaffInTwelveHrs = (areaTime) => {
-    const startTime = areaTime[0];
-    return staffWorkInYesterDay
-      .filter((staffArea) => {
-        const [endTime] = getAreaTime(staffArea.areaId);
-        const [hrs, min] = endTime.split(":");
-        const nextTimeCanWork = moment()
-          .set("hours", hrs)
-          .set("minutes", min)
-          .set("seconds", 0)
-          .add(12, "hours")
-          .format("HH:mm");
-
-        return nextTimeCanWork <= startTime;
-      })
-      .map((staff) => staff.staffId);
-  };
+  const retrySemiTime = 10;
 
   const findExceedQuotaWork = (threshold = 4) => {
     // 5 days
@@ -88,7 +67,7 @@ module.exports = () => {
     }
   };
 
-  const pickStaff = (candidateStaff, staffInTwelveHrs) => {
+  const pickStaff = (candidateStaff) => {
     let staffOverLeave = getOverTwoDaysLeave();
 
     let staffPickFirst = lodash.uniq([...staffOverLeave, ...workStaffIds]);
@@ -118,10 +97,9 @@ module.exports = () => {
       leaveStaffIds = leaveStaffIds.filter((staff) => staff !== resultPick);
       return resultPick;
     } else {
+      //เงื่อนไขที่ยอมกันได้ ไม่ต้อง 100%
       const nextCandidateStaff = candidateStaff.filter(
-        (staff) =>
-          !staffLeaveYesterDayIds.includes(staff) &&
-          !staffInTwelveHrs.includes(staff)
+        (staff) => !staffLeaveYesterDayIds.includes(staff)
       );
       showLog &&
         console.log(
@@ -138,29 +116,15 @@ module.exports = () => {
     }
   };
 
-  Array(exCludeArea.length)
-    .fill("")
-    .forEach((_, days) => {
-      showLog &&
-        console.log(`🍻 ~ =================================================:`);
-      const nowDate = moment()
-        .startOf("months")
-        .add(days, "days")
-        .format("YYYY-MM-DD");
-
-      showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
-      const areaOpenLists = dbAreaOpens.find(
-        (areaOpen) => areaOpen.date === nowDate
-      ).areaIds;
-
-      showLog && console.log(`🍻 ~ พื้นที่ที่เปิด::: ${areaOpenLists}`);
-
-      const staffLeaveInToday = dbStaffLeave.filter(
-        (staff) => staff.date === nowDate
-      );
-
+  const autoAssignArea = (
+    nowDate,
+    areaOpenLists,
+    staffLeaveInToday,
+    timeRetries
+  ) => {
+    try {
+      console.log(`🍻 ~ nowDate:::`, nowDate);
       const tempStaffWork = [];
-
       areaOpenLists.forEach((areaOpen) => {
         showLog &&
           console.log(
@@ -230,18 +194,11 @@ module.exports = () => {
             staffExceedWorkQuota
           );
 
-        const staffInTwelveHrs = findStaffInTwelveHrs(areaTime);
-        showLog &&
-          console.log(
-            `🍻 ~ เงื่อนไข 12 ชั่วโมงจากเวรที่แล้ว:::`,
-            staffInTwelveHrs
-          );
-
+        // เงื่อนไขที่ยอมไม่ได้ ต้อง 100%
         const candidateStaff = staffCanWorkInArea.filter(
           (staffId) =>
             !todayStaffWorkIds.includes(staffId) &&
             !staffExceedWorkQuota.includes(staffId)
-          // && !staffInTwelveHrs.includes(staffId)
         );
 
         showLog &&
@@ -250,7 +207,7 @@ module.exports = () => {
             candidateStaff
           );
 
-        const theChosenOne = pickStaff(candidateStaff, staffInTwelveHrs);
+        const theChosenOne = pickStaff(candidateStaff);
         if (!theChosenOne) {
           throw new Error(
             `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
@@ -260,6 +217,54 @@ module.exports = () => {
         showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
         tempStaffWork.push({ areaId: areaOpen, staffId: theChosenOne });
       });
+
+      return tempStaffWork;
+    } catch (error) {
+      if (timeRetries >= 0) {
+        console.log(
+          `========  RETRY ${nowDate} ภายในวัน (${
+            retrySemiTime - timeRetries
+          }) ========`
+        );
+        return autoAssignArea(
+          nowDate,
+          areaOpenLists,
+          staffLeaveInToday,
+          timeRetries - 1
+        );
+      } else {
+        throw new Error(error?.message || "");
+      }
+    }
+  };
+
+  Array(exCludeArea.length)
+    .fill("")
+    .forEach((_, days) => {
+      showLog &&
+        console.log(`🍻 ~ =================================================:`);
+      const nowDate = moment()
+        .startOf("months")
+        .add(days, "days")
+        .format("YYYY-MM-DD");
+
+      showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
+      const areaOpenLists = dbAreaOpens.find(
+        (areaOpen) => areaOpen.date === nowDate
+      ).areaIds;
+
+      showLog && console.log(`🍻 ~ พื้นที่ที่เปิด::: ${areaOpenLists}`);
+
+      const staffLeaveInToday = dbStaffLeave.filter(
+        (staff) => staff.date === nowDate
+      );
+
+      const tempStaffWork = autoAssignArea(
+        nowDate,
+        areaOpenLists,
+        staffLeaveInToday,
+        retrySemiTime
+      );
 
       const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
 

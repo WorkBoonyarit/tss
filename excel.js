@@ -5,7 +5,7 @@ const { exCludeArea, dbStaff, dbStaffLeave } = isDev
 
 const writeXlsxFile = require("write-excel-file/node");
 const moment = require("moment");
-const { getStaffName, getAreaName } = require("./helper");
+const { getAreaTime, getAreaName } = require("./helper");
 
 module.exports = async (results) => {
   if (!results || results?.length === 0) return;
@@ -39,7 +39,7 @@ module.exports = async (results) => {
 
       return {
         [staff.vid]: areaId
-          ? getAreaName?.(areaId)
+          ? `(${areaId}) ${getAreaName?.(areaId)} :: [${getAreaTime?.(areaId)}]`
           : isAnnualLeave
           ? "##Annual Leave"
           : "STOP",
@@ -74,6 +74,7 @@ module.exports = async (results) => {
         column: staff.vid,
         type: String,
         value: (data) => data?.[staff.vid],
+        width: 30,
       };
     }),
   ];
