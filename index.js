@@ -13,6 +13,8 @@ const logUsage = require('./logUsage');
 const excel = require('./excel');
 const autoStop = require('./autoStop');
 const excelStop = require('./excelStop');
+const autoAssignAreaV2 = require('./autoAssignAreaV2');
+const excelV2 = require('./excelV2');
 const retryTime = 300;
 const areaCannotAssign = {};
 
@@ -54,6 +56,9 @@ const run = () => {
   const stopResult = autoStop();
   // console.log(`🍻 ~ stopResult:::`, stopResult);
   excelStop(stopResult);
+
+  const { results, reportsNotFound } = autoAssignAreaV2(stopResult);
+  excelV2(results, stopResult, reportsNotFound);
   // results.forEach((r) => {
   //   console.log(r.date);
   //   console.table(mapStaffWork(r.staffWork));

@@ -6,7 +6,6 @@ module.exports = () => {
   const showLog = false;
   const minStopPerMonth = (exCludeArea.length / 30) * 10; // คูณเยอะจะยิ่งทำให้หยุดถี่ขึ้น
   const maxStop = 2; // หยุดต่อกันได้มากสุด 2 ครั้ง
-  const minToWork = 2; // ทำงานต่อเนื่องขั้นต่ำ 2 วัน / รอบการทำงาน
   const maxToWork = 5; // ทำงานมากสุด 5 วัน / รอบการทำงาน
 
   const staffAutoStop = dbStaff.map((staff) => ({
@@ -144,7 +143,7 @@ module.exports = () => {
       });
   });
 
-  !showLog && console.log(`🍻 ~ staffAutoStop:::`, JSON.stringify(staffAutoStop, null, 2));
+  // !showLog && console.log(`🍻 ~ staffAutoStop:::`, JSON.stringify(staffAutoStop, null, 2));
 
   return staffAutoStop;
 };
