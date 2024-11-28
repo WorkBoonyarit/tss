@@ -20,10 +20,10 @@ module.exports = async (results, stopResult, reportsNotFound) => {
   const objects = exCludeArea.map((_, idx) => {
     const date = moment().startOf('months').add(idx, 'days').format('YYYY-MM-DD');
 
-    const areaNoStaff = reportsNotFound
-      .filter((r) => r.nowDate === date)
-      .map((area) => area.areaOpen)
-      .toString();
+    const reportToDate = reportsNotFound.filter((r) => r.nowDate === date);
+    console.log(`🍻 ~ reportToDate:::`, reportToDate);
+
+    const staffCanWorkInArea = reportToDate.map((report) => JSON.stringify(report, null, 2)).toString();
 
     const item = dbStaff.map((staff) => {
       const areaId = data.find((s) => s.date === date && s.staffId === staff.id)?.areaId || null;
@@ -35,15 +35,11 @@ module.exports = async (results, stopResult, reportsNotFound) => {
       return {
         [staff.vid]: areaId ? `(${areaId}) ${getAreaName?.(areaId)} :: [${getAreaTime?.(areaId)}]` : isAutoStop ? 'AUTO STOP' : isAnnualLeave ? 'ลาหยุด' : '',
       };
-
-      // return {
-      //   [staff.vid]: areaId ? getAreaName?.(areaId) : "STOP",
-      // };
     });
     const result = {};
 
     Object.entries(item).forEach(([key, value]) => {
-      if (!['date', 'areaNoStaff'].includes(key)) {
+      if (!['date', 'areaNoStaff', 'staffCanWorkInArea'].includes(key)) {
         const [innerKey, innerValue] = Object.entries(value)[0];
         result[innerKey] = innerValue;
       }
@@ -51,7 +47,7 @@ module.exports = async (results, stopResult, reportsNotFound) => {
     return {
       date,
       ...result,
-      areaNoStaff,
+      staffCanWorkInArea,
     };
   });
 
@@ -70,15 +66,15 @@ module.exports = async (results, stopResult, reportsNotFound) => {
       };
     }),
     {
-      column: 'พื้่นที่ ที่ไม่มีพนักงานลง',
+      column: 'Candidate',
       type: String,
-      value: (data) => data.areaNoStaff,
+      value: (data) => data.staffCanWorkInArea,
     },
   ];
 
   await writeXlsxFile(objects, {
     schema,
-    filePath: `file-${Date.now()}.xlsx`,
-    // filePath: `file.xlsx`,
+    // filePath: `file-${Date.now()}.xlsx`,
+    filePath: `file.xlsx`,
   });
 };

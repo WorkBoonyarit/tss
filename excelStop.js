@@ -53,8 +53,8 @@ module.exports = async (results) => {
 
   await writeXlsxFile(objects, {
     schema,
-    filePath: `file-stop-${Date.now()}.xlsx`,
-    // filePath: `file-stop.xlsx`,
+    // filePath: `file-stop-${Date.now()}.xlsx`,
+    filePath: `file-stop.xlsx`,
     orientation: 'landscape',
   });
 };

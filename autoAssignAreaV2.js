@@ -2,7 +2,7 @@ const isDev = require('./isDev');
 const { dbArea, dbAreaOpens, exCludeArea, dbStaffLeave, dbStaffArea, dbStaff } = isDev ? require('./data') : require('./dataFull');
 const moment = require('moment');
 const lodash = require('lodash');
-const { getAreaTime } = require('./helper');
+const { getAreaTime, getVidStaff } = require('./helper');
 
 module.exports = (autoStopResult) => {
   const showLog = false;
@@ -28,7 +28,6 @@ module.exports = (autoStopResult) => {
 
         const areaTime = getAreaTime(areaOpen);
         showLog && console.log(`🍻 ~ เวลาเข้าเวรของพื้นที่นี้:::`, areaTime);
-
         const staffNotAvailable = staffLeaveInToday
           .filter((staffLeave) => {
             const isLeaveAnnual = staffLeave.leaveType === 'ANNUAL LEAVE';
@@ -58,7 +57,7 @@ module.exports = (autoStopResult) => {
           throw new Error(`❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`);
         }
         if (!theChosenOne && timeRetries === 0) {
-          tempReportAreaNotFound.push({ nowDate, areaOpen });
+          tempReportAreaNotFound.push({ nowDate, areaOpen, staffCanWorkInArea: staffCanWorkInArea.map((staff) => getVidStaff(staff)) });
         }
 
         showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
@@ -103,10 +102,7 @@ module.exports = (autoStopResult) => {
 
       const tempStaffWork = autoAssignArea(nowDate, areaOpenLists, staffLeaveInToday, staffAutoStopInToDay, retrySemiTime);
 
-      const staffAnnualLeaveInToday = staffLeaveInToday.filter((staffLeave) => staffLeave.leaveType === 'ANNUAL LEAVE').map((staff) => staff.staffId);
-
       showLog && console.log(`🍻 ~ ผลลัพธ์::: ${JSON.stringify(tempStaffWork, null, 2)}`);
-      showLog && console.log(`🎁 ~ พนักงานที่ลาหยุดประจำปี ::: ${staffAnnualLeaveInToday}`);
 
       // reports
       results.push({
