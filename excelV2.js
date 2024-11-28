@@ -21,7 +21,6 @@ module.exports = async (results, stopResult, reportsNotFound) => {
     const date = moment().startOf('months').add(idx, 'days').format('YYYY-MM-DD');
 
     const reportToDate = reportsNotFound.filter((r) => r.nowDate === date);
-    console.log(`🍻 ~ reportToDate:::`, reportToDate);
 
     const staffCanWorkInArea = reportToDate.map((report) => JSON.stringify(report, null, 2)).toString();
 
@@ -65,16 +64,16 @@ module.exports = async (results, stopResult, reportsNotFound) => {
         width: 30,
       };
     }),
-    {
-      column: 'Candidate',
-      type: String,
-      value: (data) => data.staffCanWorkInArea,
-    },
+    // {
+    //   column: 'Candidate',
+    //   type: String,
+    //   value: (data) => data.staffCanWorkInArea,
+    // },
   ];
 
   await writeXlsxFile(objects, {
     schema,
-    // filePath: `file-${Date.now()}.xlsx`,
-    filePath: `file.xlsx`,
+    filePath: `file-${Date.now()}.xlsx`,
+    // filePath: `file.xlsx`,
   });
 };
