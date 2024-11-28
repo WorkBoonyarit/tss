@@ -1,0 +1,12 @@
+{
+  "bracketSpacing": true,
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": true,
+  "jsxSingleQuote": true,
+  "comma": false,
+  "jsxBracketSameLine": false,
+  "printWidth": 180,
+  "arrowParens": "always",
+  "indent": [2, 2, { "SwitchCase": 1 }]
+}

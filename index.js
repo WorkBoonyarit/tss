@@ -5,12 +5,16 @@
  * 3. มาดูเรื่องของ auto วันหยุดให้พนักงาน ในกรณีที่พนักงานมีมากกว่าพื้นที่ ที่เปิด
  */
 
-const validateLeave = require("./leave");
-const autoStop = require("./autoStop");
-const countStaff = require("./countStaff");
-const { mapStaffStop, mapStaffWork, getAreaName } = require("./helper");
-const logUsage = require("./logUsage");
-const excel = require("./excel");
+const validateLeave = require('./leave');
+const autoAssignArea = require('./autoAssignArea');
+const countStaff = require('./countStaff');
+const { mapStaffStop, mapStaffWork, getAreaName } = require('./helper');
+const logUsage = require('./logUsage');
+const excel = require('./excel');
+const autoStop = require('./autoStop');
+const excelStop = require('./excelStop');
+const autoAssignAreaV2 = require('./autoAssignAreaV2');
+const excelV2 = require('./excelV2');
 const retryTime = 300;
 const areaCannotAssign = {};
 
@@ -22,7 +26,7 @@ const retries = (fn, times) => {
     const match = error.toString().match(/\(([^)]+)\)/);
     const area = match ? match[1] : null;
     if (!area) {
-      console.log("ERROR :: ", error);
+      console.log('ERROR :: ', error);
     }
     areaCannotAssign[area] = {
       areaId: area,
@@ -34,32 +38,38 @@ const retries = (fn, times) => {
       console.log(`========  RETRY (${retryTime - times}) ========`);
       return retries(fn, times - 1);
     } else {
-      console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
+      console.log('พื้นที่ ที่ไม่สามารถหา staff ได้');
       console.table(areaCannotAssign);
-      logUsage("After Execution");
-      throw new Error("All retries failed");
+      logUsage('After Execution');
+      throw new Error('All retries failed');
     }
   }
 };
 
 const run = () => {
-  logUsage("Before Execution");
+  logUsage('Before Execution');
 
-  countStaff();
+  // countStaff();
   // validateLeave();
-  const { results, historyAllStop } = retries(autoStop, retryTime - 1);
-  excel(results);
+  // const { results, historyAllStop } = retries(autoAssignArea, retryTime - 1);
+  // excel(results);
+  const stopResult = autoStop();
+  // console.log(`🍻 ~ stopResult:::`, stopResult);
+  excelStop(stopResult);
+
+  const { results, reportsNotFound } = autoAssignAreaV2(stopResult);
+  excelV2(results, stopResult, reportsNotFound);
   // results.forEach((r) => {
   //   console.log(r.date);
   //   console.table(mapStaffWork(r.staffWork));
   //   console.table(mapStaffStop(r.staffStopIds));
   // });
-  console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
-  console.table(areaCannotAssign);
-  console.log("วันหยุดของ staff จำนวนครั้ง");
-  console.table(historyAllStop);
+  // console.log("พื้นที่ ที่ไม่สามารถหา staff ได้");
+  // console.table(areaCannotAssign);
+  // console.log("วันหยุดของ staff จำนวนครั้ง");
+  // console.table(historyAllStop);
 
-  logUsage("After Execution");
+  logUsage('After Execution');
 };
 
 run();

@@ -1,326 +1,149 @@
-const isDev = require("./isDev");
-const { dbArea, dbAreaOpens, exCludeArea, dbStaffLeave, dbStaffArea, dbStaff } =
-  isDev ? require("./data") : require("./dataFull");
-const moment = require("moment");
-const lodash = require("lodash");
-const { getAreaTime } = require("./helper");
+const isDev = require('./isDev');
+const { exCludeArea, dbStaff } = isDev ? require('./data') : require('./dataFull');
+const moment = require('moment');
 
 module.exports = () => {
-  const showLog = true;
-  const nowPeriod = moment().format("YYYY-MM");
+  const showLog = false;
+  const minStopPerMonth = (exCludeArea.length / 30) * 10; // คูณเยอะจะยิ่งทำให้หยุดถี่ขึ้น
+  const maxStop = 2; // หยุดต่อกันได้มากสุด 2 ครั้ง
+  const maxToWork = 5; // ทำงานมากสุด 5 วัน / รอบการทำงาน
 
-  const results = [];
+  const staffAutoStop = dbStaff.map((staff) => ({
+    staffData: staff,
+    calendar: [],
+  }));
 
-  let staffWorkInYesterDay = []; // สำหรับเงื่อนไข ห่างจากเวรที่แล้ว 12 ชั่วโมง (ยกเว้นไม่มีคนจริงๆ)
-  let staffLeaveYesterDayIds = []; // สำหรับ ได้หยุดต่อเนื่อง 2 วัน ไม่เอาพนักงานที่หยุดในเมื่อวานมาทำ (ยกเว้นไม่มีคนจริงๆ)
-  let staffNotWorkExceedQuotaIds = []; //สำหรับเงื่อนไข ทำงานไม่เกิน 5 วัน / 1 รอบการทำงาน (เอา staff ที่เกิน 5 วันออกทุกกรณี)
-  let workStaffIds = []; //สำหรับเงื่อนไข ทำงานขั้นต่ำ 2 วัน / 1 รอบการทำงาน (จับมาเลือกก่อน)
-  let leaveStaffIds = []; // สำหรับควรหยุดไม่เกิน 2 วัน (จับมาเลือกก่อน)
-  const historyAllStop = {};
-  const retrySemiTime = 10;
-
-  const findExceedQuotaWork = (threshold = 4) => {
-    // 5 days
-    const frequencyMap = new Map();
-
-    staffNotWorkExceedQuotaIds.forEach((num) => {
-      frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
-    });
-
-    const result = Array.from(frequencyMap.entries())
-      .filter(([num, count]) => count > threshold)
-      .map(([num]) => num);
-
-    return result;
-  };
-  const getOverTwoDaysLeave = () => {
-    return lodash.uniq(duplicates([...leaveStaffIds]));
-  };
-
-  const duplicates = (arr) =>
-    arr.filter((item, index) => arr.indexOf(item) !== index);
-
-  const shuffleStaff = (
-    candidateStaff,
-    nextCandidateStaff,
-    msg,
-    shuffle = true,
-    icon
-  ) => {
-    if (nextCandidateStaff.length > 0) {
-      showLog &&
-        console.log(
-          `${icon} ~ [เลือกพนักงาน] => ${msg} :::`,
-          nextCandidateStaff
-        );
-      return shuffle
-        ? lodash.shuffle(nextCandidateStaff)[0]
-        : nextCandidateStaff[0];
-    } else {
-      showLog &&
-        console.log(
-          `🔴 ~ [เลือกพนักงาน] => ต้องใช้พนักงานทุกคนที่สามารถทำได้ :::`,
-          candidateStaff
-        );
-
-      return lodash.shuffle(candidateStaff)[0];
+  const randomStop = (nowDate, staffId) => {
+    if (nowDate < 4) {
+      const result = Math.floor(Math.random() * 100) + 1;
+      return [result < 30, 'RANDOM'];
     }
-  };
 
-  const pickStaff = (candidateStaff) => {
-    let staffOverLeave = getOverTwoDaysLeave();
+    const currentStaffData = staffAutoStop.find((staff) => staff.staffData.id === staffId);
+    const countStaffStop = currentStaffData.calendar.filter((date) => date.isStop).length;
 
-    let staffPickFirst = lodash.uniq([...staffOverLeave, ...workStaffIds]);
+    const percentStopDay = 100 - Math.floor((countStaffStop * 100) / minStopPerMonth); //  หยุดขั้นต่ำ x วัน = 0%
+    const percentDate = Math.floor((nowDate * 100) / exCludeArea.length); // วันที่ 30 วัน = 100%
+    const summary = percentDate + percentStopDay;
+    const percent = Math.floor((summary * 100) / 200);
 
-    showLog &&
-      console.log(`🍻 ~ พนักงานที่ได้หยุดครบ 2 วันแล้ว:::`, staffOverLeave);
-    showLog &&
-      console.log(`🍻 ~ พนักงานที่ได้ทำงานในวันที่ผ่านมา :::`, workStaffIds);
-    showLog &&
-      console.log(`🍻 ~ ต้องเลือกพนักงานกลุ่มนี้ก่อน:::`, staffPickFirst);
+    const result = Math.floor(Math.random() * 100) + 1;
 
-    if (staffPickFirst.length > 0) {
-      const nextCandidateStaff = staffPickFirst.filter((staff) =>
-        candidateStaff.includes(staff)
-      );
-
-      const msg =
-        "พนักงานที่สามารถทำงานต่อเนื่องได้ หรือ พนักงานที่หยุดเกิน 2 วัน";
-      const resultPick = shuffleStaff(
-        candidateStaff,
-        nextCandidateStaff,
-        msg,
-        false,
-        "🔵"
-      );
-      workStaffIds = workStaffIds.filter((staff) => staff !== resultPick);
-      leaveStaffIds = leaveStaffIds.filter((staff) => staff !== resultPick);
-      return resultPick;
-    } else {
-      //เงื่อนไขที่ยอมกันได้ ไม่ต้อง 100%
-      const nextCandidateStaff = candidateStaff.filter(
-        (staff) => !staffLeaveYesterDayIds.includes(staff)
-      );
-      showLog &&
-        console.log(
-          `⛔️ ~ พนักงานที่ได้หยุดเมื่อวาน :::`,
-          staffLeaveYesterDayIds
-        );
-      showLog &&
-        console.log(
-          `🍻 ~ ตัดพนักงานที่ได้หยุดเมื่อวานคงเหลือ :::`,
-          nextCandidateStaff
-        );
-      const msg = "พยายามไม่เลือกใช้พนักงานที่ได้หยุดเมืื่อวาน คงเหลือ";
-      return shuffleStaff(candidateStaff, nextCandidateStaff, msg, true, "🟢");
+    if (percentStopDay <= 0) {
+      return [false, `วันหยุดครบขั้นต่ำแล้ว`];
+    } else if (percentStopDay >= 100) {
+      const result = Math.floor(Math.random() * 100) + 1;
+      return [result < 30, `ยังไม่เคยได้หยุด ${result} < 30`];
     }
-  };
-
-  const autoAssignArea = (
-    nowDate,
-    areaOpenLists,
-    staffLeaveInToday,
-    timeRetries
-  ) => {
-    try {
-      console.log(`🍻 ~ nowDate:::`, nowDate);
-      const tempStaffWork = [];
-      areaOpenLists.forEach((areaOpen) => {
-        showLog &&
-          console.log(
-            `🍻 ~ ^^^^^^^^^^^^^^^^^^ พื้นที่ ::: ${areaOpen}  ::: ^^^^^^^^^^^^^^^^^^`
-          );
-        const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
-        showLog &&
-          console.log(`🍻 ~ พนักงานที่ได้พื้นที่ไปแล้ว:::`, todayStaffWorkIds);
-        showLog &&
-          console.log(
-            `📍  พนักงานที่เลือกพื้นที่นี้ไว้ `,
-            dbStaffArea
-              .filter(
-                (staff) =>
-                  staff.areaId === areaOpen && staff.period === nowPeriod
-              )
-              .map((staff) => staff.staffId)
-          );
-
-        const areaTime = getAreaTime(areaOpen);
-        showLog && console.log(`🍻 ~ เวลาเข้าเวรของพื้นที่นี้:::`, areaTime);
-
-        const staffNotAvailable = staffLeaveInToday
-          .filter((staffLeave) => {
-            const isLeaveAnnual = staffLeave.leaveType === "ANNUAL LEAVE";
-            const isLeaveMeeting = staffLeave.leaveType === "MEETING";
-            const isLeaveInAreaTime =
-              staffLeave.leaveTime[1] > areaTime[0] &&
-              staffLeave.leaveTime[0] < areaTime[1];
-
-            const isLeaveEqualAreaTime =
-              staffLeave.leaveTime[0] === areaTime[0] &&
-              staffLeave.leaveTime[1] === areaTime[1];
-            return (
-              isLeaveAnnual ||
-              (isLeaveMeeting && (isLeaveInAreaTime || isLeaveEqualAreaTime))
-            );
-          })
-          .map((staffLeave) => staffLeave.staffId);
-
-        showLog &&
-          console.log(
-            `💤 ~ พนักงานที่ไม่สามารถทำงานในพื้นที่นี้ได้:::`,
-            staffNotAvailable
-          );
-
-        const staffCanWorkInArea = dbStaffArea
-          .filter(
-            (staffArea) =>
-              staffArea.areaId === areaOpen &&
-              staffArea.period === nowPeriod &&
-              !staffNotAvailable.includes(staffArea.staffId)
-          )
-          .map((staffArea) => staffArea.staffId);
-
-        showLog &&
-          console.log(
-            `📍  พนักงานที่เลือกพื้นที่นี้ไว้และไม่ได้ลาชนกับช่วงเวลาพื้นที่`,
-            staffCanWorkInArea
-          );
-
-        const staffExceedWorkQuota = findExceedQuotaWork();
-
-        showLog &&
-          console.log(
-            `🍻 ~ พนักงานที่ทำงานเกิน 5 วัน:::`,
-            staffExceedWorkQuota
-          );
-
-        // เงื่อนไขที่ยอมไม่ได้ ต้อง 100%
-        const candidateStaff = staffCanWorkInArea.filter(
-          (staffId) =>
-            !todayStaffWorkIds.includes(staffId) &&
-            !staffExceedWorkQuota.includes(staffId)
-        );
-
-        showLog &&
-          console.log(
-            `✅ ~ พนักงานที่สามารถลงพื้นที่นี้ได้ และยังไม่ได้ลงพื้นที่ไหนเลย:::`,
-            candidateStaff
-          );
-
-        const theChosenOne = pickStaff(candidateStaff);
-        if (!theChosenOne) {
-          throw new Error(
-            `❌ ในวันที่ :: ${nowDate} :: พื้นที่ :: (${areaOpen}) :: ไม่สามารถจัดพนักงานลงได้ ::`
-          );
-        }
-
-        showLog && console.log(`🚙 ~ พนักงานที่โดนเลือก :::`, theChosenOne);
-        tempStaffWork.push({ areaId: areaOpen, staffId: theChosenOne });
-      });
-
-      return tempStaffWork;
-    } catch (error) {
-      if (timeRetries >= 0) {
-        console.log(
-          `========  RETRY ${nowDate} ภายในวัน (${
-            retrySemiTime - timeRetries
-          }) ========`
-        );
-        return autoAssignArea(
-          nowDate,
-          areaOpenLists,
-          staffLeaveInToday,
-          timeRetries - 1
-        );
-      } else {
-        throw new Error(error?.message || "");
-      }
+    if (percentDate > 90 && countStaffStop < minStopPerMonth) {
+      return [true, 'FORCE STOP'];
     }
+
+    return [
+      result < (percent > 100 ? 100 : percent),
+      `result:: ${result} :: จำนวนวันหยุด :: ${countStaffStop} :: วันที่ได้หยุดไป :: ${percentStopDay} :: วันที่ :: ${percentDate} :: % :: ${percent}`,
+    ];
   };
 
-  Array(exCludeArea.length)
-    .fill("")
-    .forEach((_, days) => {
-      showLog &&
-        console.log(`🍻 ~ =================================================:`);
-      const nowDate = moment()
-        .startOf("months")
-        .add(days, "days")
-        .format("YYYY-MM-DD");
+  const getIndexStaff = (staffId) => {
+    return staffAutoStop.findIndex((staffAuto) => staffAuto.staffData.id === staffId);
+  };
 
-      showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
-      const areaOpenLists = dbAreaOpens.find(
-        (areaOpen) => areaOpen.date === nowDate
-      ).areaIds;
+  const workExceedQuota = (idx, staffId) => {
+    const staffIndex = getIndexStaff(staffId);
+    const idxYesterday = idx - 1;
+    let i = idxYesterday;
+    let dataWork = [];
+    while (i > idxYesterday - maxToWork) {
+      dataWork.push(staffAutoStop[staffIndex].calendar[i]);
 
-      showLog && console.log(`🍻 ~ พื้นที่ที่เปิด::: ${areaOpenLists}`);
+      i--;
+    }
+    return dataWork.every((leave) => !leave.isStop);
+  };
 
-      const staffLeaveInToday = dbStaffLeave.filter(
-        (staff) => staff.date === nowDate
-      );
+  const leaveExceedQuota = (idx, staffId) => {
+    const staffIndex = getIndexStaff(staffId);
+    const idxYesterday = idx - 1;
+    let i = idxYesterday;
+    let dataLeave = [];
+    while (i > idxYesterday - maxStop) {
+      dataLeave.push(staffAutoStop[staffIndex].calendar[i]);
 
-      const tempStaffWork = autoAssignArea(
-        nowDate,
-        areaOpenLists,
-        staffLeaveInToday,
-        retrySemiTime
-      );
+      i--;
+    }
+    return dataLeave.every((leave) => leave.isStop);
+  };
 
-      const todayStaffWorkIds = tempStaffWork.map((wl) => wl.staffId);
+  const shouldWorkContinue = (idx, staffId) => {
+    const staffIndex = getIndexStaff(staffId);
+    const idxYesterday = idx - 1;
+    let i = idxYesterday;
 
-      const staffAnnualLeaveInToday = staffLeaveInToday
-        .filter((staffLeave) => staffLeave.leaveType === "ANNUAL LEAVE")
-        .map((staff) => staff.staffId);
-      const staffIds = dbStaff.map((staff) => staff.id);
-      const staffStopAllCaseIds = lodash.difference(
-        staffIds,
-        todayStaffWorkIds
-      );
-      const staffStopIds = staffStopAllCaseIds.filter(
-        (staff) => !staffAnnualLeaveInToday.includes(staff)
-      );
+    if (idx < 3) {
+      return false;
+    }
+    let dataWorkContinue = [];
+    while (i > idxYesterday - 2) {
+      dataWorkContinue.push(staffAutoStop[staffIndex].calendar[i]);
 
-      showLog &&
-        console.log(
-          `🍻 ~ ผลลัพธ์::: ${JSON.stringify(tempStaffWork, null, 2)}`
-        );
-      showLog &&
-        console.log(
-          `🎁 ~ พนักงานที่ลาหยุดประจำปี ::: ${staffAnnualLeaveInToday}`
-        );
-      showLog && console.log(`🎁 ~ พนักงานที่ได้หยุด ::: ${staffStopIds}`);
-      staffWorkInYesterDay = tempStaffWork;
-      staffLeaveYesterDayIds = staffStopAllCaseIds;
-      workStaffIds = workStaffIds.filter(
-        (staff) => !staffStopAllCaseIds.includes(staff)
-      );
-      staffNotWorkExceedQuotaIds = staffNotWorkExceedQuotaIds.filter(
-        (staff) => !staffStopIds.includes(staff)
-      );
+      i--;
+    }
+    showLog && console.log(`🍻 ~ dataWorkContinue:::`, dataWorkContinue);
 
-      leaveStaffIds = [...leaveStaffIds, ...staffStopIds];
-      workStaffIds = [...workStaffIds, ...todayStaffWorkIds];
-      staffNotWorkExceedQuotaIds = [
-        ...staffNotWorkExceedQuotaIds,
-        ...todayStaffWorkIds,
-      ];
+    //last true => stop
+    // last false => rand
 
-      // reports
-      results.push({
-        date: nowDate,
-        staffWork: tempStaffWork,
-        staffStopIds,
+    if (dataWorkContinue.every((data) => data.isStop === false)) {
+      return false;
+    }
+    return staffAutoStop[staffIndex].calendar[idx - 1].isStop === false;
+  };
+
+  const getStop = (idx, staffId) => {
+    showLog && console.log(`🍻 ~ idx:::`, idx);
+    const [rand, messageRand] = randomStop(idx + 1, staffId);
+
+    const isShouldWorkContinue = idx > 0 && shouldWorkContinue(idx, staffId);
+
+    const isLeaveExceedQuota = idx >= maxStop && leaveExceedQuota(idx, staffId);
+
+    const isWorkExceedQuota = idx >= maxToWork && workExceedQuota(idx, staffId);
+
+    showLog && console.log(`🍻 ~ isWorkExceedQuota:::`, isWorkExceedQuota);
+    showLog && console.log(`🍻 ~ isLeaveExceedQuota:::`, isLeaveExceedQuota);
+    showLog && console.log(`🍻 ~ isShouldWorkContinue:::`, isShouldWorkContinue);
+
+    if (isWorkExceedQuota) {
+      return [true, 'ทำงานเกินโควต้า'];
+    }
+    if (isLeaveExceedQuota) {
+      return [false, 'หยุดเกินโควต้า'];
+    }
+    if (isShouldWorkContinue) {
+      return [false, 'ให้ทำงานต่อเนื่อง'];
+    }
+    showLog && console.log(`RANDOM !! :: ${messageRand}`);
+    return [rand, `RANDOM !! :: ${messageRand}`];
+  };
+
+  dbStaff.forEach((staff) => {
+    Array(exCludeArea.length)
+      .fill('')
+      .forEach((_, idx) => {
+        const nowDate = moment().startOf('months').add(idx, 'days').format('YYYY-MM-DD');
+
+        showLog && console.log(`🍻 ~ nowDate:::`, nowDate);
+        const [isStop, message] = getStop(idx, staff.id);
+        showLog && console.log(`🍻 ~ isStop:::`, isStop);
+        showLog && console.log(`🍻 ~ ==================:::`);
+        const staffIndex = getIndexStaff(staff.id);
+
+        staffAutoStop[staffIndex].calendar.push({ date: nowDate, isStop, message });
       });
+  });
 
-      staffStopIds?.forEach?.((staff) => {
-        historyAllStop[staff] = {
-          staffId: staff,
-          count: (historyAllStop?.[staff]?.count || 0) + 1,
-        };
-      });
-    });
+  // !showLog && console.log(`🍻 ~ staffAutoStop:::`, JSON.stringify(staffAutoStop, null, 2));
 
-  // !showLog &&
-  //   console.log(`🎁 ~ ผลลัพธ์ ::: ${JSON.stringify(results, null, 2)}`);
-  return { results, historyAllStop };
+  return staffAutoStop;
 };
