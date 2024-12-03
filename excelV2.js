@@ -73,7 +73,7 @@ module.exports = async (results, stopResult, reportsNotFound) => {
 
   await writeXlsxFile(objects, {
     schema,
-    filePath: `file-${Date.now()}.xlsx`,
-    // filePath: `file.xlsx`,
+    // filePath: `file-${Date.now()}.xlsx`,
+    filePath: `file.xlsx`,
   });
 };
