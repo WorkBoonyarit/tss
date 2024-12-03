@@ -4,7 +4,8 @@ const moment = require('moment');
 
 module.exports = () => {
   const showLog = false;
-  const minStopPerMonth = (exCludeArea.length / 30) * 10; // คูณเยอะจะยิ่งทำให้หยุดถี่ขึ้น
+  const autoMonth = Math.floor(exCludeArea.length / 30);
+  const minStopPerMonth = autoMonth * 10; // คูณเยอะจะยิ่งทำให้หยุดถี่ขึ้น
   const maxStop = 2; // หยุดต่อกันได้มากสุด 2 ครั้ง
   const maxToWork = 5; // ทำงานมากสุด 5 วัน / รอบการทำงาน
 
@@ -13,29 +14,24 @@ module.exports = () => {
     calendar: [],
   }));
 
-  const randomStop = (nowDate, staffId) => {
-    if (nowDate < 4) {
-      const result = Math.floor(Math.random() * 100) + 1;
+  const randomStop = (idx, staffId) => {
+    const result = Math.floor(Math.random() * 100) + 1;
+    if (idx < maxToWork - 1) {
       return [result < 30, 'RANDOM'];
     }
 
     const currentStaffData = staffAutoStop.find((staff) => staff.staffData.id === staffId);
     const countStaffStop = currentStaffData.calendar.filter((date) => date.isStop).length;
 
-    const percentStopDay = 100 - Math.floor((countStaffStop * 100) / minStopPerMonth); //  หยุดขั้นต่ำ x วัน = 0%
-    const percentDate = Math.floor((nowDate * 100) / exCludeArea.length); // วันที่ 30 วัน = 100%
+    const percentStopDay = 100 - Math.floor((countStaffStop * 100) / minStopPerMonth); //  หยุดขั้นต่ำ x วัน = 0% (ยิ่งหยุดเยอะ % ยิ่งน้อย)
+    const percentDate = Math.floor((idx * 100) / exCludeArea.length); // วันที่ 30 วัน = 100% (ยิ่งวันท้ายๆ % ยิ่งเยอะ)
     const summary = percentDate + percentStopDay;
     const percent = Math.floor((summary * 100) / 200);
 
-    const result = Math.floor(Math.random() * 100) + 1;
-
     if (percentStopDay <= 0) {
       return [false, `วันหยุดครบขั้นต่ำแล้ว`];
-    } else if (percentStopDay >= 100) {
-      const result = Math.floor(Math.random() * 100) + 1;
-      return [result < 30, `ยังไม่เคยได้หยุด ${result} < 30`];
     }
-    if (percentDate > 90 && countStaffStop < minStopPerMonth) {
+    if (percentDate > 90 && countStaffStop / autoMonth < minStopPerMonth) {
       return [true, 'FORCE STOP'];
     }
 
@@ -78,22 +74,15 @@ module.exports = () => {
   const shouldWorkContinue = (idx, staffId) => {
     const staffIndex = getIndexStaff(staffId);
     const idxYesterday = idx - 1;
-    let i = idxYesterday;
+    let indexCalendar = idxYesterday;
 
-    if (idx < 3) {
-      return false;
-    }
     let dataWorkContinue = [];
-    while (i > idxYesterday - 2) {
-      dataWorkContinue.push(staffAutoStop[staffIndex].calendar[i]);
+    while (indexCalendar > idx - 3) {
+      dataWorkContinue.push(staffAutoStop[staffIndex].calendar[indexCalendar]);
 
-      i--;
+      indexCalendar--;
     }
     showLog && console.log(`🍻 ~ dataWorkContinue:::`, dataWorkContinue);
-
-    //last true => stop
-    // last false => rand
-
     if (dataWorkContinue.every((data) => data.isStop === false)) {
       return false;
     }
@@ -102,7 +91,11 @@ module.exports = () => {
 
   const getStop = (idx, staffId) => {
     showLog && console.log(`🍻 ~ idx:::`, idx);
-    const [rand, messageRand] = randomStop(idx + 1, staffId);
+    const [randResult, messageRand] = randomStop(idx + 1, staffId);
+
+    if (idx < maxToWork - 1) {
+      return [randResult, `RANDOM !! :: ${messageRand}`];
+    }
 
     const isShouldWorkContinue = idx > 0 && shouldWorkContinue(idx, staffId);
 
@@ -124,7 +117,7 @@ module.exports = () => {
       return [false, 'ให้ทำงานต่อเนื่อง'];
     }
     showLog && console.log(`RANDOM !! :: ${messageRand}`);
-    return [rand, `RANDOM !! :: ${messageRand}`];
+    return [randResult, `RANDOM !! :: ${messageRand}`];
   };
 
   dbStaff.forEach((staff) => {
